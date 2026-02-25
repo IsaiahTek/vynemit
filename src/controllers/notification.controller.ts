@@ -144,18 +144,18 @@ export class NotificationsController {
         return { success: true };
     }
 
+    @Delete(':userId/all')
+    async deleteAll(@Param('userId') userId: string) {
+        await this.notificationsService.deleteAll(userId);
+        return { success: true };
+    }
+
     @Delete(':userId/:id')
     async deleteNotification(
         @Param('userId') userId: string,
         @Param('id') id: string
     ) {
         await this.notificationsService.deleteForUser(userId, id);
-        return { success: true };
-    }
-
-    @Delete(':userId/all')
-    async deleteAll(@Param('userId') userId: string) {
-        await this.notificationsService.deleteAll(userId);
         return { success: true };
     }
 

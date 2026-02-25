@@ -105,12 +105,12 @@ let NotificationsController = class NotificationsController {
         await this.notificationsService.markAllAsRead(userId);
         return { success: true };
     }
-    async deleteNotification(userId, id) {
-        await this.notificationsService.deleteForUser(userId, id);
-        return { success: true };
-    }
     async deleteAll(userId) {
         await this.notificationsService.deleteAll(userId);
+        return { success: true };
+    }
+    async deleteNotification(userId, id) {
+        await this.notificationsService.deleteForUser(userId, id);
         return { success: true };
     }
 };
@@ -200,6 +200,13 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], NotificationsController.prototype, "markAllAsRead", null);
 __decorate([
+    (0, common_1.Delete)(':userId/all'),
+    __param(0, (0, common_1.Param)('userId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], NotificationsController.prototype, "deleteAll", null);
+__decorate([
     (0, common_1.Delete)(':userId/:id'),
     __param(0, (0, common_1.Param)('userId')),
     __param(1, (0, common_1.Param)('id')),
@@ -207,13 +214,6 @@ __decorate([
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], NotificationsController.prototype, "deleteNotification", null);
-__decorate([
-    (0, common_1.Delete)(':userId/all'),
-    __param(0, (0, common_1.Param)('userId')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", Promise)
-], NotificationsController.prototype, "deleteAll", null);
 exports.NotificationsController = NotificationsController = __decorate([
     (0, common_1.Controller)('notifications'),
     __metadata("design:paramtypes", [notification_service_1.NotificationsService])
