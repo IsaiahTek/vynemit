@@ -196,46 +196,49 @@ var NotificationCenter = class {
   }
   // ========== SUBSCRIPTIONS (Reactive) ==========
   subscribe(userId, callback) {
-    if (!this.subscribers.has(userId)) {
-      this.subscribers.set(userId, /* @__PURE__ */ new Set());
+    const sid = String(userId);
+    if (!this.subscribers.has(sid)) {
+      this.subscribers.set(sid, /* @__PURE__ */ new Set());
     }
-    this.subscribers.get(userId).add(callback);
+    this.subscribers.get(sid).add(callback);
     return () => {
-      const subs = this.subscribers.get(userId);
+      const subs = this.subscribers.get(sid);
       if (subs) {
         subs.delete(callback);
         if (subs.size === 0) {
-          this.subscribers.delete(userId);
+          this.subscribers.delete(sid);
         }
       }
     };
   }
   subscribeToEvents(userId, callback) {
-    if (!this.eventSubscribers.has(userId)) {
-      this.eventSubscribers.set(userId, /* @__PURE__ */ new Set());
+    const sid = String(userId);
+    if (!this.eventSubscribers.has(sid)) {
+      this.eventSubscribers.set(sid, /* @__PURE__ */ new Set());
     }
-    this.eventSubscribers.get(userId).add(callback);
+    this.eventSubscribers.get(sid).add(callback);
     return () => {
-      const subs = this.eventSubscribers.get(userId);
+      const subs = this.eventSubscribers.get(sid);
       if (subs) {
         subs.delete(callback);
         if (subs.size === 0) {
-          this.eventSubscribers.delete(userId);
+          this.eventSubscribers.delete(sid);
         }
       }
     };
   }
   onUnreadCountChange(userId, callback) {
-    if (!this.unreadSubscribers.has(userId)) {
-      this.unreadSubscribers.set(userId, /* @__PURE__ */ new Set());
+    const sid = String(userId);
+    if (!this.unreadSubscribers.has(sid)) {
+      this.unreadSubscribers.set(sid, /* @__PURE__ */ new Set());
     }
-    this.unreadSubscribers.get(userId).add(callback);
+    this.unreadSubscribers.get(sid).add(callback);
     return () => {
-      const subs = this.unreadSubscribers.get(userId);
+      const subs = this.unreadSubscribers.get(sid);
       if (subs) {
         subs.delete(callback);
         if (subs.size === 0) {
-          this.unreadSubscribers.delete(userId);
+          this.unreadSubscribers.delete(sid);
         }
       }
     };
@@ -422,25 +425,25 @@ var NotificationCenter = class {
     }
   }
   notifySubscribers(notification) {
-    const subs = this.subscribers.get(notification.userId);
+    const subs = this.subscribers.get(String(notification.userId));
     if (subs) {
       subs.forEach((callback) => callback(notification));
     }
   }
   notifyEventSubscribers(event) {
-    const subs = this.eventSubscribers.get(event.notification.userId);
+    const subs = this.eventSubscribers.get(String(event.notification.userId));
     if (subs) {
       subs.forEach((callback) => callback(event));
     }
   }
   notifyUnreadSubscribers(userId, count) {
-    const subs = this.unreadSubscribers.get(userId);
+    const subs = this.unreadSubscribers.get(String(userId));
     if (subs) {
       subs.forEach((callback) => callback(count, userId));
     }
   }
   generateId() {
-    return `notif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `notif_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
   }
 };
 
