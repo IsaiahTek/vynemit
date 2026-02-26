@@ -12,7 +12,7 @@ import { getNotificationCenterInstance } from '../module';
 export class NotificationsService implements OnModuleInit, OnModuleDestroy {
     private readonly logger = new Logger(NotificationsService.name);
     private eventEmitter = new EventEmitter();
-    
+
     private notificationCenter: NotificationCenter | null = null;
 
     constructor() {
@@ -21,11 +21,11 @@ export class NotificationsService implements OnModuleInit, OnModuleDestroy {
 
     async onModuleInit() {
         this.logger.log('NotificationsService: onModuleInit called. Retrieving NotificationCenter instance...');
-        
+
         // Wait a bit to ensure the initialization provider has run
         // This is a safety mechanism
         await new Promise(resolve => setTimeout(resolve, 100));
-        
+
         try {
             this.notificationCenter = getNotificationCenterInstance();
             this.logger.log('NotificationsService: NotificationCenter instance retrieved successfully.');
@@ -74,7 +74,7 @@ export class NotificationsService implements OnModuleInit, OnModuleDestroy {
         try {
             const center = this.getCenter();
             console.log("✅ NotificationCenter instance obtained");
-            
+
             notification = await center.send(input);
             console.log("✅ Notification sent successfully:", notification.id);
 
@@ -151,7 +151,7 @@ export class NotificationsService implements OnModuleInit, OnModuleDestroy {
             throw new NotFoundException('Notification not found.');
         }
 
-        if (notification.userId !== userId) {
+        if (String(notification.userId) !== String(userId)) {
             throw new ForbiddenException('Cannot mark another user\'s notification as read.');
         }
 
@@ -179,7 +179,7 @@ export class NotificationsService implements OnModuleInit, OnModuleDestroy {
             throw new NotFoundException('Notification not found.');
         }
 
-        if (notification.userId !== userId) {
+        if (String(notification.userId) !== String(userId)) {
             throw new ForbiddenException('Cannot delete another user\'s notification.');
         }
 

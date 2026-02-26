@@ -128,7 +128,7 @@ let NotificationsService = NotificationsService_1 = class NotificationsService {
         if (!notification) {
             throw new common_1.NotFoundException('Notification not found.');
         }
-        if (notification.userId !== userId) {
+        if (String(notification.userId) !== String(userId)) {
             throw new common_1.ForbiddenException('Cannot mark another user\'s notification as read.');
         }
         await center.markAsRead(notificationId);
@@ -150,7 +150,7 @@ let NotificationsService = NotificationsService_1 = class NotificationsService {
         if (!notification) {
             throw new common_1.NotFoundException('Notification not found.');
         }
-        if (notification.userId !== userId) {
+        if (String(notification.userId) !== String(userId)) {
             throw new common_1.ForbiddenException('Cannot delete another user\'s notification.');
         }
         await center.delete(notificationId);

@@ -37,9 +37,10 @@ let NotificationsController = class NotificationsController {
             }).catch((error) => {
                 subscriber.error(error);
             });
-            const unsubscribeNotification = this.notificationsService.onNotificationSent((notification) => {
+            const unsubscribeNotification = this.notificationsService.subscribe(userId, (notification) => {
                 console.log(`ATTEMPTING TO EMIT Notification sent for user ${notification.userId}:`, notification);
-                if (notification.userId === userId) {
+                // Stringify the IDs to handle cases where userId is an ObjectId or other complex type
+                if (String(notification.userId) === String(userId)) {
                     console.log(`Emitting notification to client ${userId}:`, notification);
                     push('notification', {
                         type: 'notification',
@@ -47,8 +48,8 @@ let NotificationsController = class NotificationsController {
                     });
                 }
             });
-            const unsubscribeUnread = this.notificationsService.onUnreadCountChanged((changedUserId, count) => {
-                if (changedUserId === userId) {
+            const unsubscribeUnread = this.notificationsService.onUnreadCountChange(userId, (count, changedUserId) => {
+                if (String(changedUserId) === String(userId)) {
                     push('unread-count', {
                         type: 'unread-count',
                         count,
