@@ -104,9 +104,10 @@ let NotificationsGateway = NotificationsGateway_1 = class NotificationsGateway {
             this.logger.error('WebSocket server not initialized. Skipping broadcast.');
             return;
         }
-        const clientIds = this.userToClients.get(userId);
+        const sid = String(userId);
+        const clientIds = this.userToClients.get(sid);
         if (!clientIds || clientIds.size === 0) {
-            this.logger.verbose(`No active clients found for user ${userId}. Skipping broadcast.`);
+            this.logger.verbose(`No active clients found for user ${sid}. Skipping broadcast.`);
             return;
         }
         this.logger.log(`Broadcasting ${event} to ${clientIds.size} client(s) for user ${userId}`);
@@ -203,7 +204,7 @@ __decorate([
 ], NotificationsGateway.prototype, "handleDelete", null);
 exports.NotificationsGateway = NotificationsGateway = NotificationsGateway_1 = __decorate([
     (0, websockets_1.WebSocketGateway)({
-        cors: { origin: '*' },
+        cors: { origin: true, credentials: true },
         namespace: '/notifications'
     }),
     __metadata("design:paramtypes", [])
