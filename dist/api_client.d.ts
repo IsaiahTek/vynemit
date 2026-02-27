@@ -19,6 +19,7 @@ export declare class NotificationApiClient {
     deleteNotification(notificationId: string): Promise<void>;
     deleteAll(): Promise<void>;
     updatePreferences(prefs: Partial<NotificationPreferences>): Promise<void>;
+    private sseConnectionStatus;
     connectSSE(onMessage: (data: any) => void): Promise<boolean>;
     connectWebSocket(onMessage: (data: any) => void): Promise<boolean>;
     private handleSSEMessage;

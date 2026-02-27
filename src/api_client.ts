@@ -126,8 +126,19 @@ export class NotificationApiClient {
     });
   }
 
+  private sseConnectionStatus: 'connecting' | 'connected' | 'error' | 'idle' = 'idle';
+
   async connectSSE(onMessage: (data: any) => void): Promise<boolean> {
     if (typeof EventSource === 'undefined') return false;
+
+    if (this.sseConnectionStatus === 'connected') {
+      return true;
+    }
+    if (this.sseConnectionStatus === 'connecting') {
+      return false;
+    }
+
+    this.sseConnectionStatus = 'connecting';
 
     const base = (this.config.sseUrl ?? this.config.apiUrl).replace(/\/+$/, '');
     const configuredPath = this.config.ssePath ?? '/notifications/:userId/stream';
@@ -179,6 +190,7 @@ export class NotificationApiClient {
           this.sse?.close();
           this.sse = undefined;
           settle(false);
+          this.sseConnectionStatus = 'error';
         }
       }, connectTimeoutMs);
 
@@ -189,6 +201,7 @@ export class NotificationApiClient {
         console.log('🔌 SSE connected');
         this.emitDebug('sse', 'connected');
         settle(true);
+        this.sseConnectionStatus = 'connected';
       };
 
       this.sse.onerror = (error) => {
@@ -199,6 +212,7 @@ export class NotificationApiClient {
           this.sse?.close();
           this.sse = undefined;
           settle(false);
+          this.sseConnectionStatus = 'error';
         }
       };
     });

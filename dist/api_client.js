@@ -56,6 +56,7 @@ var NotificationApiClient = /** @class */ (function () {
         var _this = this;
         this.reconnectAttempts = 0;
         this.maxReconnectAttempts = 5;
+        this.sseConnectionStatus = 'idle';
         // Helper function to process messages (optional, based on your original logic)
         this.handleMessage = function (data, onMessage) {
             if (data.notification) {
@@ -242,6 +243,13 @@ var NotificationApiClient = /** @class */ (function () {
                     case 0:
                         if (typeof EventSource === 'undefined')
                             return [2 /*return*/, false];
+                        if (this.sseConnectionStatus === 'connected') {
+                            return [2 /*return*/, true];
+                        }
+                        if (this.sseConnectionStatus === 'connecting') {
+                            return [2 /*return*/, false];
+                        }
+                        this.sseConnectionStatus = 'connecting';
                         base = ((_b = this.config.sseUrl) !== null && _b !== void 0 ? _b : this.config.apiUrl).replace(/\/+$/, '');
                         configuredPath = (_c = this.config.ssePath) !== null && _c !== void 0 ? _c : '/notifications/:userId/stream';
                         normalizedPath = configuredPath.startsWith('/') ? configuredPath : "/".concat(configuredPath);
@@ -288,6 +296,7 @@ var NotificationApiClient = /** @class */ (function () {
                                         (_a = _this.sse) === null || _a === void 0 ? void 0 : _a.close();
                                         _this.sse = undefined;
                                         settle(false);
+                                        _this.sseConnectionStatus = 'error';
                                     }
                                 }, connectTimeoutMs);
                                 _this.sse.onopen = function () {
@@ -297,6 +306,7 @@ var NotificationApiClient = /** @class */ (function () {
                                     console.log('🔌 SSE connected');
                                     _this.emitDebug('sse', 'connected');
                                     settle(true);
+                                    _this.sseConnectionStatus = 'connected';
                                 };
                                 _this.sse.onerror = function (error) {
                                     var _a;
@@ -307,6 +317,7 @@ var NotificationApiClient = /** @class */ (function () {
                                         (_a = _this.sse) === null || _a === void 0 ? void 0 : _a.close();
                                         _this.sse = undefined;
                                         settle(false);
+                                        _this.sseConnectionStatus = 'error';
                                     }
                                 };
                             })];
