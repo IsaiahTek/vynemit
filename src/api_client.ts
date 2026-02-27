@@ -248,6 +248,7 @@ export class NotificationApiClient {
         if (token) wsUrl.searchParams.set('token', token);
 
         this.ws = new WebSocket(wsUrl.toString());
+        console.log('WS URL: ', wsUrl.toString(), this.ws);
 
         this.ws.onopen = () => settle(true);
 
