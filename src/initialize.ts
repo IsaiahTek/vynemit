@@ -8,7 +8,7 @@ import { notificationStore } from './store'
 // ============================================================================
 export let apiClient: NotificationApiClient | null = null;
 
-export function initializeNotifications({config, onInitialized, onConnected, onNotification}: {config: NotificationConfig, onInitialized?: () => void, onConnected?: () => void, onNotification?: (notification: Notification) => void}) {
+export function initializeNotifications({ config, onInitialized, onConnected, onNotification }: { config: NotificationConfig, onInitialized?: () => void, onConnected?: () => void, onNotification?: (notification: Notification) => void }) {
   apiClient = new NotificationApiClient(config);
 
   const getState = (): NotificationState => {
@@ -58,6 +58,21 @@ export function initializeNotifications({config, onInitialized, onConnected, onN
     if (data.type === 'notification') {
       onNotification?.(isSSE ? data.data : data.notification);
       addNotification(isSSE ? data.data : data.notification);
+      const appNotification = new Notification(isSSE ? data.data.title : data.notification.title, {
+        body: isSSE ? data.data.body : data.notification.body,
+        icon: isSSE ? data.data.icon : data.notification.icon,
+        tag: isSSE ? data.data.tag : data.notification.tag,
+        requireInteraction: isSSE ? data.data.requireInteraction : data.notification.requireInteraction,
+        silent: isSSE ? data.data.silent : data.notification.silent,
+        data: isSSE ? data.data.data : data.notification.data,
+      });
+      appNotification.onclick = () => {
+        window.focus();
+        appNotification.close();
+        if (isSSE ? data.data.data : data.notification.data) {
+          window.open(isSSE ? data.data.data : data.notification.data, '_blank');
+        }
+      };
     } else if (data.type === 'unread-count') {
       const state = getState();
       notificationStore.update({ ...state, unreadCount: isSSE ? data.data : data.count }, "key");
@@ -73,6 +88,9 @@ export function initializeNotifications({config, onInitialized, onConnected, onN
   };
 
   const connectRealtime = async () => {
+    if (Notification.permission !== 'granted') {
+      await Notification.requestPermission();
+    }
     const preferredTransport = config.realtimeTransport ?? 'sse';
     let connected = false;
     let connectedTransport: RealtimeTransport | null = null;

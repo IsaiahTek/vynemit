@@ -126,5 +126,6 @@ export interface NotificationConfig {
   debug?: boolean;
   onDebugEvent?: (event: NotificationDebugEvent) => void;
   getAuthToken?: () => Promise<string | null>;
+  onRefreshAuth?: () => Promise<void>;
   dataLocator?: (response: any) => any
 }

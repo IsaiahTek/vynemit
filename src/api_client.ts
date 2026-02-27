@@ -29,7 +29,7 @@ export class NotificationApiClient {
   /* ============================================================
      HTTP REQUESTS
   ============================================================ */
-  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  private async request<T>(endpoint: string, options: RequestInit = {}, isRetry: boolean = false): Promise<T> {
     const token = this.config.getAuthToken ? await this.config.getAuthToken() : null;
 
     const response = await fetch(`${this.config.apiUrl}${endpoint}`, {
@@ -41,6 +41,16 @@ export class NotificationApiClient {
         ...options.headers
       }
     });
+
+    if (response.status === 401 && !isRetry) {
+      await this.config.onRefreshAuth?.();
+      const token = this.config.getAuthToken ? await this.config.getAuthToken() : null;
+      options.headers = {
+        ...options.headers,
+        ...(token && { Authorization: `Bearer ${token}` })
+      };
+      return await this.request<T>(endpoint, options, true);
+    }
 
     if (!response.ok) {
       throw new Error(`API Error: ${response.statusText}`);

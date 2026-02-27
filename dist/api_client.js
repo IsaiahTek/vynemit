@@ -59,25 +59,45 @@ var NotificationApiClient = /** @class */ (function () {
        HTTP REQUESTS
     ============================================================ */
     NotificationApiClient.prototype.request = function (endpoint_1) {
-        return __awaiter(this, arguments, void 0, function (endpoint, options) {
-            var token, _a, response;
+        return __awaiter(this, arguments, void 0, function (endpoint, options, isRetry) {
+            var token, _a, response, token_1, _b;
+            var _c, _d;
             if (options === void 0) { options = {}; }
-            return __generator(this, function (_b) {
-                switch (_b.label) {
+            if (isRetry === void 0) { isRetry = false; }
+            return __generator(this, function (_e) {
+                switch (_e.label) {
                     case 0:
                         if (!this.config.getAuthToken) return [3 /*break*/, 2];
                         return [4 /*yield*/, this.config.getAuthToken()];
                     case 1:
-                        _a = _b.sent();
+                        _a = _e.sent();
                         return [3 /*break*/, 3];
                     case 2:
                         _a = null;
-                        _b.label = 3;
+                        _e.label = 3;
                     case 3:
                         token = _a;
                         return [4 /*yield*/, fetch("".concat(this.config.apiUrl).concat(endpoint), __assign(__assign({}, options), { credentials: 'include', headers: __assign(__assign({ 'Content-Type': 'application/json' }, (token && { Authorization: "Bearer ".concat(token) })), options.headers) }))];
                     case 4:
-                        response = _b.sent();
+                        response = _e.sent();
+                        if (!(response.status === 401 && !isRetry)) return [3 /*break*/, 10];
+                        return [4 /*yield*/, ((_d = (_c = this.config).onRefreshAuth) === null || _d === void 0 ? void 0 : _d.call(_c))];
+                    case 5:
+                        _e.sent();
+                        if (!this.config.getAuthToken) return [3 /*break*/, 7];
+                        return [4 /*yield*/, this.config.getAuthToken()];
+                    case 6:
+                        _b = _e.sent();
+                        return [3 /*break*/, 8];
+                    case 7:
+                        _b = null;
+                        _e.label = 8;
+                    case 8:
+                        token_1 = _b;
+                        options.headers = __assign(__assign({}, options.headers), (token_1 && { Authorization: "Bearer ".concat(token_1) }));
+                        return [4 /*yield*/, this.request(endpoint, options, true)];
+                    case 9: return [2 /*return*/, _e.sent()];
+                    case 10:
                         if (!response.ok) {
                             throw new Error("API Error: ".concat(response.statusText));
                         }

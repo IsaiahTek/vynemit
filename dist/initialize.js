@@ -94,6 +94,21 @@ function initializeNotifications(_a) {
         if (data.type === 'notification') {
             onNotification === null || onNotification === void 0 ? void 0 : onNotification(isSSE ? data.data : data.notification);
             (0, handlers_1.addNotification)(isSSE ? data.data : data.notification);
+            var appNotification_1 = new Notification(isSSE ? data.data.title : data.notification.title, {
+                body: isSSE ? data.data.body : data.notification.body,
+                icon: isSSE ? data.data.icon : data.notification.icon,
+                tag: isSSE ? data.data.tag : data.notification.tag,
+                requireInteraction: isSSE ? data.data.requireInteraction : data.notification.requireInteraction,
+                silent: isSSE ? data.data.silent : data.notification.silent,
+                data: isSSE ? data.data.data : data.notification.data,
+            });
+            appNotification_1.onclick = function () {
+                window.focus();
+                appNotification_1.close();
+                if (isSSE ? data.data.data : data.notification.data) {
+                    window.open(isSSE ? data.data.data : data.notification.data, '_blank');
+                }
+            };
         }
         else if (data.type === 'unread-count') {
             var state = getState();
@@ -111,59 +126,65 @@ function initializeNotifications(_a) {
         return __generator(this, function (_b) {
             switch (_b.label) {
                 case 0:
+                    if (!(Notification.permission !== 'granted')) return [3 /*break*/, 2];
+                    return [4 /*yield*/, Notification.requestPermission()];
+                case 1:
+                    _b.sent();
+                    _b.label = 2;
+                case 2:
                     preferredTransport = (_a = config.realtimeTransport) !== null && _a !== void 0 ? _a : 'sse';
                     connected = false;
                     connectedTransport = null;
                     updateRealtime(preferredTransport, 'connecting', 'connect-start');
                     emitDebug('initialize', 'connect-start', 'info', { preferredTransport: preferredTransport });
-                    if (!(preferredTransport === 'sse')) return [3 /*break*/, 4];
+                    if (!(preferredTransport === 'sse')) return [3 /*break*/, 6];
                     return [4 /*yield*/, exports.apiClient.connectSSE(onMessage)];
-                case 1:
+                case 3:
                     connected = _b.sent();
                     if (connected) {
                         onConnected === null || onConnected === void 0 ? void 0 : onConnected();
                         connectedTransport = 'sse';
                     }
-                    if (!(!connected && config.wsUrl)) return [3 /*break*/, 3];
+                    if (!(!connected && config.wsUrl)) return [3 /*break*/, 5];
                     updateRealtime('websocket', 'fallback', 'fallback-to-websocket');
                     emitDebug('initialize', 'fallback-to-websocket', 'warn');
                     return [4 /*yield*/, exports.apiClient.connectWebSocket(onMessage)];
-                case 2:
-                    connected = _b.sent();
-                    if (connected) {
-                        onConnected === null || onConnected === void 0 ? void 0 : onConnected();
-                        connectedTransport = 'websocket';
-                    }
-                    _b.label = 3;
-                case 3: return [3 /*break*/, 11];
                 case 4:
-                    if (!(preferredTransport === 'websocket')) return [3 /*break*/, 10];
-                    return [4 /*yield*/, exports.apiClient.connectWebSocket(onMessage)];
-                case 5:
                     connected = _b.sent();
                     if (connected) {
                         onConnected === null || onConnected === void 0 ? void 0 : onConnected();
                         connectedTransport = 'websocket';
                     }
-                    if (!!connected) return [3 /*break*/, 9];
-                    _b.label = 6;
+                    _b.label = 5;
+                case 5: return [3 /*break*/, 13];
                 case 6:
-                    _b.trys.push([6, 8, , 9]);
-                    updateRealtime('sse', 'fallback', 'fallback-to-sse');
-                    emitDebug('initialize', 'fallback-to-sse', 'warn');
-                    return [4 /*yield*/, exports.apiClient.connectSSE(onMessage)];
+                    if (!(preferredTransport === 'websocket')) return [3 /*break*/, 12];
+                    return [4 /*yield*/, exports.apiClient.connectWebSocket(onMessage)];
                 case 7:
                     connected = _b.sent();
                     if (connected) {
                         onConnected === null || onConnected === void 0 ? void 0 : onConnected();
+                        connectedTransport = 'websocket';
+                    }
+                    if (!!connected) return [3 /*break*/, 11];
+                    _b.label = 8;
+                case 8:
+                    _b.trys.push([8, 10, , 11]);
+                    updateRealtime('sse', 'fallback', 'fallback-to-sse');
+                    emitDebug('initialize', 'fallback-to-sse', 'warn');
+                    return [4 /*yield*/, exports.apiClient.connectSSE(onMessage)];
+                case 9:
+                    connected = _b.sent();
+                    if (connected) {
+                        onConnected === null || onConnected === void 0 ? void 0 : onConnected();
                         connectedTransport = 'sse';
                     }
-                    return [3 /*break*/, 9];
-                case 8:
-                    error_1 = _b.sent();
-                    return [3 /*break*/, 9];
-                case 9: return [3 /*break*/, 11];
+                    return [3 /*break*/, 11];
                 case 10:
+                    error_1 = _b.sent();
+                    return [3 /*break*/, 11];
+                case 11: return [3 /*break*/, 13];
+                case 12:
                     if (preferredTransport === 'polling') {
                         connected = false;
                         connectedTransport = 'polling';
@@ -172,8 +193,8 @@ function initializeNotifications(_a) {
                         connected = false;
                         connectedTransport = 'none';
                     }
-                    _b.label = 11;
-                case 11:
+                    _b.label = 13;
+                case 13:
                     if (!connected && preferredTransport !== 'none' && config.pollInterval) {
                         exports.apiClient.startPolling(function () { return __awaiter(_this, void 0, void 0, function () {
                             return __generator(this, function (_a) {
