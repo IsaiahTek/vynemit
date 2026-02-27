@@ -113,7 +113,7 @@ let NotificationsGateway = NotificationsGateway_1 = class NotificationsGateway {
         this.logger.log(`Broadcasting ${event} to ${clientIds.size} client(s) for user ${userId}`);
         // Use the namespace's sockets collection to emit to specific clients
         clientIds.forEach(clientId => {
-            const socket = this.server.sockets.sockets.get(clientId);
+            const socket = this.server.sockets.get(clientId);
             if (socket) {
                 socket.emit(event, data);
                 this.logger.verbose(`✅ SENT ${event} to client: ${clientId} (User: ${userId})`);
