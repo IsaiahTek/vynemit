@@ -87,18 +87,19 @@ function initializeNotifications(config, onInitialized) {
         };
         store_1.notificationStore.update(__assign(__assign({}, state), { realtime: realtime }), "key");
     };
-    var onMessage = function (data) {
+    var onMessage = function (data, isSSE) {
+        if (isSSE === void 0) { isSSE = false; }
         console.log("GOT NEW \"".concat(data.type, "\" NOTIFICATION: "), data);
         if (data.type === 'notification') {
-            (0, handlers_1.addNotification)(data.notification);
+            (0, handlers_1.addNotification)(isSSE ? data.data : data.notification);
         }
         else if (data.type === 'unread-count') {
             var state = getState();
-            store_1.notificationStore.update(__assign(__assign({}, state), { unreadCount: data.count }), "key");
+            store_1.notificationStore.update(__assign(__assign({}, state), { unreadCount: isSSE ? data.data : data.count }), "key");
         }
         else if (data.type === 'initial-data') {
             var state = getState();
-            store_1.notificationStore.update(__assign(__assign({}, state), { notifications: data.notifications, unreadCount: data.unreadCount, isConnected: true }), "key");
+            store_1.notificationStore.update(__assign(__assign({}, state), { notifications: isSSE ? data.data.notifications : data.notifications, unreadCount: isSSE ? data.data.unreadCount : data.unreadCount, isConnected: true }), "key");
         }
     };
     var connectRealtime = function () { return __awaiter(_this, void 0, void 0, function () {

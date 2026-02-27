@@ -21,7 +21,7 @@ export declare class NotificationApiClient {
     updatePreferences(prefs: Partial<NotificationPreferences>): Promise<void>;
     connectRealtime(onMessage: (data: any) => void): Promise<boolean>;
     connectWebSocket(onMessage: (data: any) => void): Promise<boolean>;
-    connectSSE(onMessage: (data: any) => void): Promise<boolean>;
+    connectSSE(onMessage: (data: any, isSSE: boolean) => void): Promise<boolean>;
     startPolling(callback: () => Promise<void> | void): void;
     stopPolling(): void;
     disconnectRealtime(): void;
