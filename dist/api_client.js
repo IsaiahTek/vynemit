@@ -325,7 +325,7 @@ var NotificationApiClient = /** @class */ (function () {
     };
     NotificationApiClient.prototype.connectWebSocket = function (onMessage) {
         return __awaiter(this, void 0, void 0, function () {
-            var socketIO, io, token, _a, error_1;
+            var io_1, token_1, _a, error_1;
             var _this = this;
             return __generator(this, function (_b) {
                 switch (_b.label) {
@@ -337,8 +337,7 @@ var NotificationApiClient = /** @class */ (function () {
                         _b.trys.push([1, 6, , 7]);
                         return [4 /*yield*/, Promise.resolve().then(function () { return require('socket.io-client'); })];
                     case 2:
-                        socketIO = _b.sent();
-                        io = socketIO.io;
+                        io_1 = (_b.sent()).io;
                         if (!this.config.getAuthToken) return [3 /*break*/, 4];
                         return [4 /*yield*/, this.config.getAuthToken()];
                     case 3:
@@ -348,31 +347,44 @@ var NotificationApiClient = /** @class */ (function () {
                         _a = null;
                         _b.label = 5;
                     case 5:
-                        token = _a;
-                        this.ws = io(this.config.wsUrl, __assign(__assign({ query: {
-                                userId: this.config.userId,
-                            } }, (token && { auth: { token: token } })), { withCredentials: true, transports: ['websocket', 'polling'], reconnectionAttempts: this.maxReconnectAttempts }));
-                        this.emitDebug('websocket', 'connect-attempt', 'info', { url: this.config.wsUrl });
-                        this.ws.on('connect', function () {
-                            console.log('🔌 WebSocket connected');
-                            _this.reconnectAttempts = 0;
-                            _this.emitDebug('websocket', 'connected');
+                        token_1 = _a;
+                        this.emitDebug('websocket', 'connect-attempt', 'info', {
+                            url: this.config.wsUrl
                         });
-                        this.ws.on('initial-data', function (data) { return _this.handleMessage(data, onMessage); });
-                        this.ws.on('notification', function (data) { return _this.handleMessage(data, onMessage); });
-                        this.ws.on('unread-count', function (data) { return _this.handleMessage(data, onMessage); });
-                        this.ws.on('error', function (error) {
-                            console.error('❌ Socket.IO error:', error);
-                            _this.emitDebug('websocket', 'error', 'error');
-                        });
-                        this.ws.on('disconnect', function (reason) {
-                            console.log("\uD83D\uDD0C Socket.IO disconnected. Reason: ".concat(reason));
-                            _this.emitDebug('websocket', 'disconnected', 'warn', { reason: reason });
-                        });
-                        return [2 /*return*/, true];
+                        console.log("ABOUT TO CONNECT TO WEBSOCKET");
+                        return [2 /*return*/, new Promise(function (resolve) {
+                                var settled = false;
+                                var settle = function (value) {
+                                    if (settled)
+                                        return;
+                                    settled = true;
+                                    resolve(value);
+                                };
+                                _this.ws = io_1(_this.config.wsUrl, __assign(__assign({ query: { userId: _this.config.userId } }, (token_1 && { auth: { token: token_1 } })), { withCredentials: true, transports: ['websocket', 'polling'], reconnectionAttempts: _this.maxReconnectAttempts, timeout: 5000 }));
+                                _this.ws.on('connect', function () {
+                                    console.log('🔌 WebSocket connected');
+                                    _this.emitDebug('websocket', 'connected');
+                                    _this.reconnectAttempts = 0;
+                                    settle(true);
+                                });
+                                _this.ws.on('connect_error', function (err) {
+                                    console.error('❌ connect_error:', err.message);
+                                    _this.emitDebug('websocket', 'connect-error', 'error', {
+                                        message: err.message
+                                    });
+                                    settle(false);
+                                });
+                                _this.ws.on('disconnect', function (reason) {
+                                    console.log('🔌 Socket.IO disconnected:', reason);
+                                    _this.emitDebug('websocket', 'disconnected', 'warn', { reason: reason });
+                                });
+                                _this.ws.on('initial-data', function (data) { return _this.handleMessage(data, onMessage); });
+                                _this.ws.on('notification', function (data) { return _this.handleMessage(data, onMessage); });
+                                _this.ws.on('unread-count', function (data) { return _this.handleMessage(data, onMessage); });
+                            })];
                     case 6:
                         error_1 = _b.sent();
-                        console.error('Failed to initialize socket.io-client. Falling back from WebSocket transport.', error_1);
+                        console.error('Failed to initialize socket.io-client:', error_1);
                         this.emitDebug('websocket', 'connect-failed', 'error');
                         return [2 /*return*/, false];
                     case 7: return [2 /*return*/];

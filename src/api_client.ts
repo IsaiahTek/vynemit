@@ -8,7 +8,8 @@ import {
   Notification,
   NotificationFilters,
   NotificationPreferences,
-  NotificationStats} from './types';
+  NotificationStats
+} from './types';
 
 
 
@@ -48,7 +49,7 @@ export class NotificationApiClient {
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const token = this.config.getAuthToken ? await this.config.getAuthToken() : null;
-    
+
     const response = await fetch(`${this.config.apiUrl}${endpoint}`, {
       ...options,
       credentials: 'include', // Ensure cookies are sent for session-based auth
@@ -80,10 +81,10 @@ export class NotificationApiClient {
     const query = params.toString() ? `?${params.toString()}` : '';
     const rawNotifications = await this.request(`/notifications/${this.config.userId}${query}`);
 
-    const notifications:Notification[] = this.config.dataLocator ? this.config.dataLocator(rawNotifications) : rawNotifications;
-    
+    const notifications: Notification[] = this.config.dataLocator ? this.config.dataLocator(rawNotifications) : rawNotifications;
+
     // Parse date strings to Date objects
-    return Array.isArray(notifications) ? notifications.map(this.parseNotificationDates): [this.parseNotificationDates(notifications)];
+    return Array.isArray(notifications) ? notifications.map(this.parseNotificationDates) : [this.parseNotificationDates(notifications)];
   }
 
   async getUnreadCount(): Promise<number> {
@@ -189,40 +190,60 @@ export class NotificationApiClient {
     if (!this.config.wsUrl) return false;
 
     try {
-      const socketIO = await import('socket.io-client');
-      const io = socketIO.io;
+      const { io } = await import('socket.io-client');
       const token = this.config.getAuthToken ? await this.config.getAuthToken() : null;
-      this.ws = io(this.config.wsUrl, {
-        query: {
-          userId: this.config.userId,
-        },
-        ...(token && { auth: { token } }),
-        withCredentials: true,
-        transports: ['websocket', 'polling'],
-        reconnectionAttempts: this.maxReconnectAttempts
-      });
-      this.emitDebug('websocket', 'connect-attempt', 'info', { url: this.config.wsUrl });
 
-      this.ws.on('connect', () => {
-        console.log('🔌 WebSocket connected');
-        this.reconnectAttempts = 0;
-        this.emitDebug('websocket', 'connected');
-      });
-      this.ws.on('initial-data', (data: any) => this.handleMessage(data, onMessage));
-      this.ws.on('notification', (data: any) => this.handleMessage(data, onMessage));
-      this.ws.on('unread-count', (data: any) => this.handleMessage(data, onMessage));
-      this.ws.on('error', (error: any) => {
-        console.error('❌ Socket.IO error:', error);
-        this.emitDebug('websocket', 'error', 'error');
-      });
-      this.ws.on('disconnect', (reason: string) => {
-        console.log(`🔌 Socket.IO disconnected. Reason: ${reason}`);
-        this.emitDebug('websocket', 'disconnected', 'warn', { reason });
+      this.emitDebug('websocket', 'connect-attempt', 'info', {
+        url: this.config.wsUrl
       });
 
-      return true;
+      console.log("ABOUT TO CONNECT TO WEBSOCKET");
+
+      return new Promise<boolean>((resolve) => {
+        let settled = false;
+
+        const settle = (value: boolean) => {
+          if (settled) return;
+          settled = true;
+          resolve(value);
+        };
+
+        this.ws = io(this.config.wsUrl, {
+          query: { userId: this.config.userId },
+          ...(token && { auth: { token } }),
+          withCredentials: true,
+          transports: ['websocket', 'polling'],
+          reconnectionAttempts: this.maxReconnectAttempts,
+          timeout: 5000,
+        });
+
+        this.ws.on('connect', () => {
+          console.log('🔌 WebSocket connected');
+          this.emitDebug('websocket', 'connected');
+          this.reconnectAttempts = 0;
+          settle(true);
+        });
+
+        this.ws.on('connect_error', (err: any) => {
+          console.error('❌ connect_error:', err.message);
+          this.emitDebug('websocket', 'connect-error', 'error', {
+            message: err.message
+          });
+          settle(false);
+        });
+
+        this.ws.on('disconnect', (reason: string) => {
+          console.log('🔌 Socket.IO disconnected:', reason);
+          this.emitDebug('websocket', 'disconnected', 'warn', { reason });
+        });
+
+        this.ws.on('initial-data', (data: any) => this.handleMessage(data, onMessage));
+        this.ws.on('notification', (data: any) => this.handleMessage(data, onMessage));
+        this.ws.on('unread-count', (data: any) => this.handleMessage(data, onMessage));
+      });
+
     } catch (error) {
-      console.error('Failed to initialize socket.io-client. Falling back from WebSocket transport.', error);
+      console.error('Failed to initialize socket.io-client:', error);
       this.emitDebug('websocket', 'connect-failed', 'error');
       return false;
     }
@@ -248,15 +269,15 @@ export class NotificationApiClient {
 
   // Helper function to process messages (optional, based on your original logic)
   private handleMessage = (data: any, onMessage: (data: any) => void) => {
-      if (data.notification) {
-          data.notification = this.parseNotificationDates(data.notification);
-      }
-      if (Array.isArray(data.notifications)) {
-        data.notifications = data.notifications.map((notification: Notification) => this.parseNotificationDates(notification));
-      }
-      onMessage(data);
+    if (data.notification) {
+      data.notification = this.parseNotificationDates(data.notification);
+    }
+    if (Array.isArray(data.notifications)) {
+      data.notifications = data.notifications.map((notification: Notification) => this.parseNotificationDates(notification));
+    }
+    onMessage(data);
   }
-  
+
   disconnectWebSocket(): void {
     if (this.sse) {
       this.sse.close();
