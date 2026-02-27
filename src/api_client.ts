@@ -208,7 +208,7 @@ export class NotificationApiClient {
           resolve(value);
         };
 
-        this.ws = io(this.config.wsUrl, {
+        this.ws = io(`${this.config.wsUrl}/notifications`, {
           query: { userId: this.config.userId },
           ...(token && { auth: { token } }),
           withCredentials: true,

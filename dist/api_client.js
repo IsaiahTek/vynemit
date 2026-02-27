@@ -360,7 +360,7 @@ var NotificationApiClient = /** @class */ (function () {
                                     settled = true;
                                     resolve(value);
                                 };
-                                _this.ws = io_1(_this.config.wsUrl, __assign(__assign({ query: { userId: _this.config.userId } }, (token_1 && { auth: { token: token_1 } })), { withCredentials: true, transports: ['websocket', 'polling'], reconnectionAttempts: _this.maxReconnectAttempts, timeout: 5000 }));
+                                _this.ws = io_1("".concat(_this.config.wsUrl, "/notifications"), __assign(__assign({ query: { userId: _this.config.userId } }, (token_1 && { auth: { token: token_1 } })), { withCredentials: true, transports: ['websocket', 'polling'], reconnectionAttempts: _this.maxReconnectAttempts, timeout: 5000 }));
                                 _this.ws.on('connect', function () {
                                     console.log('🔌 WebSocket connected');
                                     _this.emitDebug('websocket', 'connected');
