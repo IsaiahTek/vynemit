@@ -22,58 +22,58 @@ export class NotificationsController {
         return this.notificationsService.healthCheck();
     }
 
-    @Sse(':userId/stream')
-    streamNotifications(
-        @Param('userId') userId: string,
-        @Req() req: RequestLike
-    ): Observable<MessageEvent> {
-        return new Observable<MessageEvent>((subscriber) => {
-            const push = (type: string, data: any) => subscriber.next({ type, data });
+    // @Sse(':userId/stream')
+    // streamNotifications(
+    //     @Param('userId') userId: string,
+    //     @Req() req: RequestLike
+    // ): Observable<MessageEvent> {
+    //     return new Observable<MessageEvent>((subscriber) => {
+    //         const push = (type: string, data: any) => subscriber.next({ type, data });
 
-            void Promise.all([
-                this.notificationsService.getForUser(userId, { limit: 20 }),
-                this.notificationsService.getUnreadCount(userId),
-            ]).then(([notifications, unreadCount]) => {
-                push('initial-data', { notifications, unreadCount });
-            }).catch((error) => {
-                subscriber.error(error);
-            });
+    //         void Promise.all([
+    //             this.notificationsService.getForUser(userId, { limit: 20 }),
+    //             this.notificationsService.getUnreadCount(userId),
+    //         ]).then(([notifications, unreadCount]) => {
+    //             push('initial-data', { notifications, unreadCount });
+    //         }).catch((error) => {
+    //             subscriber.error(error);
+    //         });
 
-            const unsubscribeNotification = this.notificationsService.subscribe(userId, (notification) => {
-                console.log(`ATTEMPTING TO EMIT Notification sent for user ${notification.userId}:`, notification);
-                // Stringify the IDs to handle cases where userId is an ObjectId or other complex type
-                if (String(notification.userId) === String(userId)) {
-                    console.log(`Emitting notification to client ${userId}:`, notification);
-                    push('notification', {
-                        type: 'notification',
-                        notification,
-                    });
-                }
-            });
+    //         const unsubscribeNotification = this.notificationsService.subscribe(userId, (notification) => {
+    //             console.log(`ATTEMPTING TO EMIT Notification sent for user ${notification.userId}:`, notification);
+    //             // Stringify the IDs to handle cases where userId is an ObjectId or other complex type
+    //             if (String(notification.userId) === String(userId)) {
+    //                 console.log(`Emitting notification to client ${userId}:`, notification);
+    //                 push('notification', {
+    //                     type: 'notification',
+    //                     notification,
+    //                 });
+    //             }
+    //         });
 
-            const unsubscribeUnread = this.notificationsService.onUnreadCountChange(userId, (count, changedUserId) => {
-                if (String(changedUserId) === String(userId)) {
-                    push('unread-count', {
-                        type: 'unread-count',
-                        count,
-                    });
-                }
-            });
+    //         const unsubscribeUnread = this.notificationsService.onUnreadCountChange(userId, (count, changedUserId) => {
+    //             if (String(changedUserId) === String(userId)) {
+    //                 push('unread-count', {
+    //                     type: 'unread-count',
+    //                     count,
+    //                 });
+    //             }
+    //         });
 
-            const close = () => {
-                unsubscribeNotification();
-                unsubscribeUnread();
-                subscriber.complete();
-            };
+    //         const close = () => {
+    //             unsubscribeNotification();
+    //             unsubscribeUnread();
+    //             subscriber.complete();
+    //         };
 
-            req.once('close', close);
+    //         req.once('close', close);
 
-            return () => {
-                req.removeListener('close', close);
-                close();
-            };
-        });
-    }
+    //         return () => {
+    //             req.removeListener('close', close);
+    //             close();
+    //         };
+    //     });
+    // }
 
     @Get(':userId')
     async getNotifications(

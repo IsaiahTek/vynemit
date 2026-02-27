@@ -1,16 +1,9 @@
-import { MessageEvent } from "@nestjs/common";
-import { Observable } from "rxjs";
-type RequestLike = {
-    once(event: 'close', listener: () => void): void;
-    removeListener(event: 'close', listener: () => void): void;
-};
 import { NotificationsService } from "../services/notification.service";
 import { NotificationInput, NotificationPreferences } from '@synq/notifications-core/';
 export declare class NotificationsController {
     private readonly notificationsService;
     constructor(notificationsService: NotificationsService);
     health(): Promise<Record<string, boolean>>;
-    streamNotifications(userId: string, req: RequestLike): Observable<MessageEvent>;
     getNotifications(userId: string, status?: string, type?: string, category?: string, limit?: string, offset?: string): Promise<import("@synq/notifications-core/").Notification[]>;
     getUnreadCount(userId: string): Promise<{
         count: number;
@@ -35,4 +28,3 @@ export declare class NotificationsController {
         success: boolean;
     }>;
 }
-export {};

@@ -17,7 +17,6 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.NotificationsController = void 0;
 const common_1 = require("@nestjs/common");
-const rxjs_1 = require("rxjs");
 const notification_service_1 = require("../services/notification.service");
 let NotificationsController = class NotificationsController {
     constructor(notificationsService) {
@@ -26,48 +25,52 @@ let NotificationsController = class NotificationsController {
     async health() {
         return this.notificationsService.healthCheck();
     }
-    streamNotifications(userId, req) {
-        return new rxjs_1.Observable((subscriber) => {
-            const push = (type, data) => subscriber.next({ type, data });
-            void Promise.all([
-                this.notificationsService.getForUser(userId, { limit: 20 }),
-                this.notificationsService.getUnreadCount(userId),
-            ]).then(([notifications, unreadCount]) => {
-                push('initial-data', { notifications, unreadCount });
-            }).catch((error) => {
-                subscriber.error(error);
-            });
-            const unsubscribeNotification = this.notificationsService.subscribe(userId, (notification) => {
-                console.log(`ATTEMPTING TO EMIT Notification sent for user ${notification.userId}:`, notification);
-                // Stringify the IDs to handle cases where userId is an ObjectId or other complex type
-                if (String(notification.userId) === String(userId)) {
-                    console.log(`Emitting notification to client ${userId}:`, notification);
-                    push('notification', {
-                        type: 'notification',
-                        notification,
-                    });
-                }
-            });
-            const unsubscribeUnread = this.notificationsService.onUnreadCountChange(userId, (count, changedUserId) => {
-                if (String(changedUserId) === String(userId)) {
-                    push('unread-count', {
-                        type: 'unread-count',
-                        count,
-                    });
-                }
-            });
-            const close = () => {
-                unsubscribeNotification();
-                unsubscribeUnread();
-                subscriber.complete();
-            };
-            req.once('close', close);
-            return () => {
-                req.removeListener('close', close);
-                close();
-            };
-        });
-    }
+    // @Sse(':userId/stream')
+    // streamNotifications(
+    //     @Param('userId') userId: string,
+    //     @Req() req: RequestLike
+    // ): Observable<MessageEvent> {
+    //     return new Observable<MessageEvent>((subscriber) => {
+    //         const push = (type: string, data: any) => subscriber.next({ type, data });
+    //         void Promise.all([
+    //             this.notificationsService.getForUser(userId, { limit: 20 }),
+    //             this.notificationsService.getUnreadCount(userId),
+    //         ]).then(([notifications, unreadCount]) => {
+    //             push('initial-data', { notifications, unreadCount });
+    //         }).catch((error) => {
+    //             subscriber.error(error);
+    //         });
+    //         const unsubscribeNotification = this.notificationsService.subscribe(userId, (notification) => {
+    //             console.log(`ATTEMPTING TO EMIT Notification sent for user ${notification.userId}:`, notification);
+    //             // Stringify the IDs to handle cases where userId is an ObjectId or other complex type
+    //             if (String(notification.userId) === String(userId)) {
+    //                 console.log(`Emitting notification to client ${userId}:`, notification);
+    //                 push('notification', {
+    //                     type: 'notification',
+    //                     notification,
+    //                 });
+    //             }
+    //         });
+    //         const unsubscribeUnread = this.notificationsService.onUnreadCountChange(userId, (count, changedUserId) => {
+    //             if (String(changedUserId) === String(userId)) {
+    //                 push('unread-count', {
+    //                     type: 'unread-count',
+    //                     count,
+    //                 });
+    //             }
+    //         });
+    //         const close = () => {
+    //             unsubscribeNotification();
+    //             unsubscribeUnread();
+    //             subscriber.complete();
+    //         };
+    //         req.once('close', close);
+    //         return () => {
+    //             req.removeListener('close', close);
+    //             close();
+    //         };
+    //     });
+    // }
     async getNotifications(userId, status, type, category, limit, offset) {
         const filters = {
             ...(status && { status: status }),
@@ -122,14 +125,6 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], NotificationsController.prototype, "health", null);
-__decorate([
-    (0, common_1.Sse)(':userId/stream'),
-    __param(0, (0, common_1.Param)('userId')),
-    __param(1, (0, common_1.Req)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
-    __metadata("design:returntype", rxjs_1.Observable)
-], NotificationsController.prototype, "streamNotifications", null);
 __decorate([
     (0, common_1.Get)(':userId'),
     __param(0, (0, common_1.Param)('userId')),
