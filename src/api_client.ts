@@ -10,11 +10,13 @@ import {
   NotificationPreferences,
   NotificationStats
 } from './types';
+import { io, Socket } from "socket.io-client";
+
 
 export class NotificationApiClient {
   private config: NotificationConfig;
 
-  private ws?: WebSocket;
+  private ws?: Socket;
   private sse?: EventSource;
 
   private wsPromise?: Promise<boolean>;
@@ -247,24 +249,24 @@ export class NotificationApiClient {
         wsUrl.searchParams.set('userId', this.config.userId);
         if (token) wsUrl.searchParams.set('token', token);
 
-        this.ws = new WebSocket(wsUrl.toString());
+        this.ws = io(wsUrl.toString());
         console.log('WS URL: ', wsUrl.toString(), this.ws);
 
-        this.ws.onopen = () => settle(true);
+        this.ws.on('connect', () => settle(true));
 
-        this.ws.onmessage = (event) => {
+        this.ws.on('message', (event) => {
           try {
             onMessage(JSON.parse(event.data));
           } catch {
             onMessage(event.data);
           }
-        };
+        });
 
-        this.ws.onerror = () => {
+        this.ws.on('error', () => {
           if (!settled) settle(false);
-        };
+        });
 
-        this.ws.onclose = () => { };
+        this.ws.on('close', () => { });
       } catch {
         settle(false);
       }

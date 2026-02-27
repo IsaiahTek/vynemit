@@ -51,6 +51,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.NotificationApiClient = void 0;
+var socket_io_client_1 = require("socket.io-client");
 var NotificationApiClient = /** @class */ (function () {
     function NotificationApiClient(config) {
         this.config = config;
@@ -370,22 +371,22 @@ var NotificationApiClient = /** @class */ (function () {
                                 wsUrl.searchParams.set('userId', this.config.userId);
                                 if (token)
                                     wsUrl.searchParams.set('token', token);
-                                this.ws = new WebSocket(wsUrl.toString());
+                                this.ws = (0, socket_io_client_1.io)(wsUrl.toString());
                                 console.log('WS URL: ', wsUrl.toString(), this.ws);
-                                this.ws.onopen = function () { return settle(true); };
-                                this.ws.onmessage = function (event) {
+                                this.ws.on('connect', function () { return settle(true); });
+                                this.ws.on('message', function (event) {
                                     try {
                                         onMessage(JSON.parse(event.data));
                                     }
                                     catch (_a) {
                                         onMessage(event.data);
                                     }
-                                };
-                                this.ws.onerror = function () {
+                                });
+                                this.ws.on('error', function () {
                                     if (!settled)
                                         settle(false);
-                                };
-                                this.ws.onclose = function () { };
+                                });
+                                this.ws.on('close', function () { });
                                 return [3 /*break*/, 6];
                             case 5:
                                 _b = _d.sent();
