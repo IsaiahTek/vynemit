@@ -384,10 +384,7 @@ var NotificationApiClient = /** @class */ (function () {
                                 });
                                 this.ws.onAny(function (eventName, payload) {
                                     console.log('WS Event:', eventName, payload);
-                                    onMessage({
-                                        type: eventName,
-                                        data: payload,
-                                    });
+                                    onMessage(payload);
                                 });
                                 this.ws.on('connect_error', function (err) {
                                     console.error('WS Connect Error:', err);
