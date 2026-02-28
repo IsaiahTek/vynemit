@@ -3,7 +3,7 @@
 // ============================================================================
 
 import { Injectable, OnModuleInit, OnModuleDestroy, Logger, InternalServerErrorException, ForbiddenException, NotFoundException } from "@nestjs/common";
-import { NotificationCenter, NotificationInput, NotificationFilters, NotificationPreferences, NotificationTemplate, Unsubscribe, Notification } from "@synq/notifications-core";
+import { NotificationCenter, NotificationInput, NotificationMulticastInput, NotificationFilters, NotificationPreferences, NotificationTemplate, Unsubscribe, Notification } from "@synq/notifications-core";
 import { EventEmitter } from "events";
 import { NOTIFICATION_CENTER } from "../types/types";
 import { getNotificationCenterInstance } from '../module';
@@ -95,6 +95,17 @@ export class NotificationsService implements OnModuleInit, OnModuleDestroy {
     async sendBatch(inputs: NotificationInput[]): Promise<Notification[]> {
         const center = this.getCenter();
         const notifications = await center.sendBatch(inputs);
+
+        notifications.forEach(notification => {
+            this.eventEmitter.emit('notification:sent', notification);
+        });
+
+        return notifications;
+    }
+
+    async multicast(inputs: NotificationMulticastInput): Promise<Notification[]> {
+        const center = this.getCenter();
+        const notifications = await center.sendMulticast(inputs);
 
         notifications.forEach(notification => {
             this.eventEmitter.emit('notification:sent', notification);

@@ -91,6 +91,14 @@ let NotificationsService = NotificationsService_1 = class NotificationsService {
         });
         return notifications;
     }
+    async multicast(inputs) {
+        const center = this.getCenter();
+        const notifications = await center.sendMulticast(inputs);
+        notifications.forEach(notification => {
+            this.eventEmitter.emit('notification:sent', notification);
+        });
+        return notifications;
+    }
     async schedule(input, when) {
         const center = this.getCenter();
         return center.schedule(input, when);
