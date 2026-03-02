@@ -79,8 +79,8 @@ export class NotificationsService implements OnModuleInit, OnModuleDestroy {
             console.log("✅ Notification sent successfully:", notification.id);
 
             // Emit the local event for the WebSocket to pick up
-            // this.eventEmitter.emit('notification:sent', notification);
-            // console.log("✅ Event emitted: notification:sent");
+            this.eventEmitter.emit('notification:sent', notification);
+            console.log("✅ Event emitted: notification:sent");
 
         } catch (error: any) {
             const errorMessage = `Failed to send notification via NotificationCenter: ${error.message}`;
