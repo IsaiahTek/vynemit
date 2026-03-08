@@ -1,3 +1,0 @@
-src/postgres_storage_adapter.ts(15,28): error TS2307: Cannot find module '../db/migrations' or its corresponding type declarations.
-src/postgres_storage_adapter.ts(33,14): error TS2420: Class 'PostgresStorageAdapter' incorrectly implements interface 'StorageAdapter'.
-  Type 'PostgresStorageAdapter' is missing the following properties from type 'StorageAdapter': markAsUnread, markAllAsUnread

@@ -47,7 +47,7 @@ export class NotificationsService implements OnModuleInit, OnModuleDestroy {
             // Fallback: try to get it again
             this.notificationCenter = getNotificationCenterInstance();
         }
-        return this.notificationCenter;
+        return this.notificationCenter!;
     }
 
     // ========== EVENT EMITTER (for WebSocket integration) ==========
