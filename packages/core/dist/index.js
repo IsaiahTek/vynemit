@@ -453,19 +453,23 @@ var NotificationCenter = class {
       notification.channels.map(async (channel) => {
         const transport = this.transports.get(channel);
         if (!transport) {
+          console.warn(`[NotificationCenter] No transport found for channel: ${channel}`);
           return null;
         }
         const channelNotification = this.castNotification(notification, channel);
         if (!transport.canSend(channelNotification, prefs)) {
+          console.log(`[NotificationCenter] Delivery skipped for ${channel} due to preferences`);
           return null;
         }
         try {
+          console.log(`[NotificationCenter] Attempting delivery through transport: ${channel}`);
           const receipt = await transport.send(channelNotification, prefs);
           if (this.storage.saveReceipt) {
             await this.storage.saveReceipt(receipt);
           }
           return receipt;
         } catch (error) {
+          console.error(`[NotificationCenter] Delivery failed for channel ${channel}:`, error);
           const receipt = {
             notificationId: notification.id,
             channel,
