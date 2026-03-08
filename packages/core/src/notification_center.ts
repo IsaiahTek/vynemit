@@ -1,4 +1,4 @@
-import { NotificationConfig, NotificationInput, NotificationFilters, NotificationPreferences, Unsubscribe, ChannelType, DeliveryReceipt, DigestConfig, NotificationEvent, NotificationMiddleware, NotificationPriority, NotificationStats, NotificationStatus, NotificationStatus, NotificationTemplate, QueueAdapter, StorageAdapter, TransportAdapter, Notification, NotificationMulticastInput, EmailNotification, SmsNotification, PushNotification, InAppNotification } from "./types";
+import { NotificationConfig, NotificationInput, NotificationFilters, NotificationPreferences, Unsubscribe, ChannelType, DeliveryReceipt, DigestConfig, NotificationEvent, NotificationMiddleware, NotificationPriority, NotificationStats, NotificationStatus, NotificationTemplate, QueueAdapter, StorageAdapter, TransportAdapter, Notification, NotificationMulticastInput, EmailNotification, SmsNotification, PushNotification, InAppNotification } from "./types";
 // ============================================================================
 // NOTIFICATION CENTER IMPLEMENTATION
 // ============================================================================
@@ -413,7 +413,7 @@ export class NotificationCenter {
     callback: (count: number, userId: string) => void
   ): Unsubscribe {
     const sid = String(userId);
-    if (!unreadSubscribers.has(sid)) {
+    if (!this.unreadSubscribers.has(sid)) {
       this.unreadSubscribers.set(sid, new Set());
     }
     this.unreadSubscribers.get(sid)!.add(callback);
