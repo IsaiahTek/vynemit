@@ -1,5 +1,5 @@
 import { OnModuleInit, OnModuleDestroy } from "@nestjs/common";
-import { NotificationInput, NotificationMulticastInput, NotificationFilters, NotificationPreferences, NotificationTemplate, Unsubscribe, Notification } from "@synq/notifications-core";
+import { NotificationInput, NotificationMulticastInput, NotificationFilters, NotificationPreferences, NotificationTemplate, Unsubscribe, Notification } from "@notifyc/core";
 export declare class NotificationsService implements OnModuleInit, OnModuleDestroy {
     private readonly logger;
     private eventEmitter;
@@ -17,7 +17,7 @@ export declare class NotificationsService implements OnModuleInit, OnModuleDestr
     getForUser(userId: string, filters?: NotificationFilters): Promise<Notification[]>;
     getById(id: string): Promise<Notification | null>;
     getUnreadCount(userId: string): Promise<number>;
-    getStats(userId: string): Promise<import("@synq/notifications-core").NotificationStats>;
+    getStats(userId: string): Promise<import("@notifyc/core").NotificationStats>;
     markAsRead(notificationId: string): Promise<void>;
     markAsReadForUser(userId: string, notificationId: string): Promise<void>;
     markAllAsRead(userId: string): Promise<void>;

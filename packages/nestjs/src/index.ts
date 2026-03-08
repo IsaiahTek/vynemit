@@ -1,4 +1,4 @@
-export * from '@synq/notifications-core';
+export * from '@notifyc/core';
 
 export * from './controllers/notification.controller';
 export * from './gateways/notifications-websocket.gateway';

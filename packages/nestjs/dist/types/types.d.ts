@@ -1,4 +1,4 @@
-import { NotificationConfig, NotificationTemplate } from "@synq/notifications-core";
+import { NotificationConfig, NotificationTemplate } from "@notifyc/core";
 export declare const NOTIFICATION_OPTIONS = "NOTIFICATION_OPTIONS";
 export declare const NOTIFICATION_CENTER = "NOTIFICATION_CENTER";
 export interface NotificationsModuleOptions extends NotificationConfig {

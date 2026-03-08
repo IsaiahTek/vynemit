@@ -1,7 +1,7 @@
 import { DynamicModule } from '@nestjs/common';
 import { NotificationsModuleOptions, NotificationsModuleAsyncOptions } from './types/types';
 import { NotificationsService } from './services/notification.service';
-import { NotificationCenter } from '@synq/notifications-core';
+import { NotificationCenter } from '@notifyc/core';
 export declare function getNotificationCenterInstance(): NotificationCenter;
 export declare function getNotificationsServiceInstance(): NotificationsService;
 export declare function setNotificationsServiceInstance(service: NotificationsService): void;

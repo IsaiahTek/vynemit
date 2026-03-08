@@ -7,7 +7,7 @@ Complete guide for integrating Synq Notifications with **NestJS** and **Express.
 ### NestJS
 
 ```bash
-npm install @synq/notifications-nestjs @synq/notifications-core
+npm install @synq/notifications-nestjs @notifyc/core
 # Optional: only needed if you enable the built-in WebSocket gateway
 npm install @nestjs/websockets @nestjs/platform-socket.io socket.io
 ```
@@ -15,7 +15,7 @@ npm install @nestjs/websockets @nestjs/platform-socket.io socket.io
 ### Express.js
 
 ```bash
-npm install @synq/notifications-express @synq/notifications-core
+npm install @synq/notifications-express @notifyc/core
 npm install ws
 ```
 
@@ -444,7 +444,7 @@ app.post("/auth/signup", async (req, res) => {
 If you want more control:
 
 ```typescript
-import { NotificationCenter } from '@synq/notifications-core';
+import { NotificationCenter } from '@notifyc/core';
 
 const notificationCenter = new NotificationCenter({
   storage: new PostgresStorageAdapter(...),

@@ -3,7 +3,7 @@ import { NotificationsModuleOptions, NotificationsModuleAsyncOptions } from './t
 import { NotificationsController } from './controllers/notification.controller';
 import { NotificationsService } from './services/notification.service';
 import { NotificationsGateway } from './gateways/notifications-websocket.gateway';
-import { NotificationCenter } from '@synq/notifications-core';
+import { NotificationCenter } from '@notifyc/core';
 
 let globalNotificationCenterInstance: NotificationCenter | null = null;
 let globalNotificationsServiceInstance: NotificationsService | null = null;

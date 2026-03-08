@@ -1,5 +1,5 @@
 {
-  "name": "@synq/notifications-core",
+  "name": "@notifyc/core",
   "version": "1.0.0",
   "description": "Framework-agnostic notification system with unified dispatch, storage, and transport layers",
   "main": "dist/index.js",

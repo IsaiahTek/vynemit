@@ -5,23 +5,23 @@ type RequestLike = {
     removeListener(event: 'close', listener: () => void): void;
 };
 import { NotificationsService } from "../services/notification.service";
-import { NotificationInput, NotificationPreferences } from '@synq/notifications-core/';
+import { NotificationInput, NotificationPreferences } from '@notifyc/core/';
 export declare class NotificationsController {
     private readonly notificationsService;
     constructor(notificationsService: NotificationsService);
     health(): Promise<Record<string, boolean>>;
     streamNotifications(userId: string, req: RequestLike): Observable<MessageEvent>;
-    getNotifications(userId: string, status?: string, type?: string, category?: string, limit?: string, offset?: string): Promise<import("@synq/notifications-core/").Notification[]>;
+    getNotifications(userId: string, status?: string, type?: string, category?: string, limit?: string, offset?: string): Promise<import("@notifyc/core/").Notification[]>;
     getUnreadCount(userId: string): Promise<{
         count: number;
     }>;
-    getStats(userId: string): Promise<import("@synq/notifications-core/").NotificationStats>;
+    getStats(userId: string): Promise<import("@notifyc/core/").NotificationStats>;
     getPreferences(userId: string): Promise<NotificationPreferences>;
     updatePreferences(userId: string, preferences: Partial<NotificationPreferences>): Promise<{
         success: boolean;
     }>;
-    sendNotification(input: NotificationInput): Promise<import("@synq/notifications-core/").Notification>;
-    sendBatch(inputs: NotificationInput[]): Promise<import("@synq/notifications-core/").Notification[]>;
+    sendNotification(input: NotificationInput): Promise<import("@notifyc/core/").Notification>;
+    sendBatch(inputs: NotificationInput[]): Promise<import("@notifyc/core/").Notification[]>;
     markAsRead(userId: string, id: string): Promise<{
         success: boolean;
     }>;

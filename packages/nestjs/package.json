@@ -1,5 +1,5 @@
 {
-  "name": "notifyc-nestjs",
+  "name": "@notifyc/nestjs",
   "version": "1.0.0",
   "description": "Official NotifyC NestJs Wrapper that makes it super easy to send and manage notifications from within your NestJs backend",
   "main": "dist/index.js",
@@ -40,6 +40,6 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "@synq/notifications-core": "github:IsaiahTek/notify-core"
+    "@notifyc/core": "github:IsaiahTek/notify-core"
   }
 }

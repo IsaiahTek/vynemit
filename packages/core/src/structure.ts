@@ -3,7 +3,7 @@
 // ### 6. Package Structure
 // ```
 // packages/
-// ├── core/                           # @synq/notifications-core
+// ├── core/                           # @notifyc/core
 // │   ├── src/
 // │   │   ├── center.ts              # Main NotificationCenter
 // │   │   ├── models/                # Types & interfaces

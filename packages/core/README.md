@@ -1,4 +1,4 @@
-# @synq/notifications-core
+# @notifyc/core
 
 > A framework-agnostic notification system with unified dispatch, storage, and transport layers.
 
@@ -17,7 +17,7 @@
 ## Installation
 
 ```bash
-npm install @synq/notifications-core
+npm install @notifyc/core
 ```
 
 ## Quick Start
@@ -27,7 +27,7 @@ import {
   NotificationCenter,
   MemoryStorageAdapter,
   ConsoleTransportAdapter
-} from '@synq/notifications-core';
+} from '@notifyc/core';
 
 // Initialize
 const center = new NotificationCenter({

@@ -6,7 +6,7 @@ This guide shows you how to set up a complete production notification system usi
 
 ```bash
 # Core
-npm install @synq/notifications-core
+npm install @notifyc/core
 
 # Storage
 npm install @synq/notifications-storage-postgres pg
@@ -211,7 +211,7 @@ export class UserEmailService {
 
 ```typescript
 // src/notifications/middleware/rate-limit.ts
-import { NotificationMiddleware, Notification } from '@synq/notifications-core';
+import { NotificationMiddleware, Notification } from '@notifyc/core';
 import Redis from 'ioredis';
 
 export class RateLimitMiddleware implements NotificationMiddleware {
@@ -259,7 +259,7 @@ export class RateLimitMiddleware implements NotificationMiddleware {
 }
 
 // src/notifications/middleware/deduplication.ts
-import { NotificationMiddleware, Notification } from '@synq/notifications-core';
+import { NotificationMiddleware, Notification } from '@notifyc/core';
 import Redis from 'ioredis';
 import crypto from 'crypto';
 
@@ -298,7 +298,7 @@ export class DeduplicationMiddleware implements NotificationMiddleware {
 }
 
 // src/notifications/middleware/analytics.ts
-import { NotificationMiddleware, Notification } from '@synq/notifications-core';
+import { NotificationMiddleware, Notification } from '@notifyc/core';
 
 export class AnalyticsMiddleware implements NotificationMiddleware {
   name = 'analytics';
@@ -343,7 +343,7 @@ export class AnalyticsMiddleware implements NotificationMiddleware {
 
 ```typescript
 // src/notifications/templates/index.ts
-import { NotificationCenter } from '@synq/notifications-core';
+import { NotificationCenter } from '@notifyc/core';
 
 export function registerTemplates(center: NotificationCenter) {
   // Welcome template
@@ -419,7 +419,7 @@ export function registerTemplates(center: NotificationCenter) {
 
 ```typescript
 // src/notifications/index.ts
-import { NotificationCenter } from '@synq/notifications-core';
+import { NotificationCenter } from '@notifyc/core';
 import { PostgresStorageAdapter } from '@synq/notifications-storage-postgres';
 import { FirebasePushAdapter } from '@synq/notifications-transport-firebase';
 import { SendGridEmailAdapter } from '@synq/notifications-transport-sendgrid';

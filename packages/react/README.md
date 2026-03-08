@@ -15,7 +15,7 @@ Unlike traditional React state management, `react-synq-store` doesn't require wr
 ## 📦 Installation
 
 ```bash
-npm install notifyc-react react-synq-store @synq/notifications-core
+npm install notifyc-react react-synq-store @notifyc/core
 ```
 
 ## 🎯 Quick Start (3 Steps)

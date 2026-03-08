@@ -1,5 +1,5 @@
 {
-  "name": "notifyc-react",
+  "name": "@notifyc/react",
   "version": "1.0.0",
   "description": "ReactJs/NextJs adapter/wrapper for Notifyc library. It makes getting real-time notification from server reflect on frontend/client in real-time'",
   "main": "dist/index.js",

@@ -11,7 +11,7 @@ type RequestLike = {
 };
 
 import { NotificationsService } from "../services/notification.service";
-import { NotificationFilters, NotificationInput, NotificationPreferences } from '@synq/notifications-core/';
+import { NotificationFilters, NotificationInput, NotificationPreferences } from '@notifyc/core/';
 
 @Controller('notifications')
 export class NotificationsController {

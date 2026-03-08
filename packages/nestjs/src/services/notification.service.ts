@@ -3,7 +3,7 @@
 // ============================================================================
 
 import { Injectable, OnModuleInit, OnModuleDestroy, Logger, InternalServerErrorException, ForbiddenException, NotFoundException } from "@nestjs/common";
-import { NotificationCenter, NotificationInput, NotificationMulticastInput, NotificationFilters, NotificationPreferences, NotificationTemplate, Unsubscribe, Notification } from "@synq/notifications-core";
+import { NotificationCenter, NotificationInput, NotificationMulticastInput, NotificationFilters, NotificationPreferences, NotificationTemplate, Unsubscribe, Notification } from "@notifyc/core";
 import { EventEmitter } from "events";
 import { NOTIFICATION_CENTER } from "../types/types";
 import { getNotificationCenterInstance } from '../module';

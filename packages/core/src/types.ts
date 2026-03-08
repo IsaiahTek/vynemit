@@ -30,44 +30,74 @@ export interface Notification {
   type: string; // 'comment', 'like', 'system', etc.
   title: string;
   body: string;
+  text?: string;
+  html?: string;
   data?: Record<string, unknown>; // Custom payload
-  
+
   // Targeting
   userId: string;
   groupId?: string; // For batch notifications
-  
+
   // Metadata
   priority: NotificationPriority;
   category?: string; // Grouping/filtering
-  
+
   // State
   status: NotificationStatus;
   readAt?: Date;
   createdAt: Date;
   scheduledFor?: Date; // Delayed delivery
   expiresAt?: Date; // TTL
-  
+
   // Channels
   channels: ChannelType[];
-  
+
   // Actions (for interactive notifications)
   actions?: NotificationAction[];
+}
+
+export interface EmailNotification extends Notification {
+  data: {
+    email?: string;
+    [key: string]: unknown;
+  };
+}
+
+export interface SmsNotification extends Notification {
+  data: {
+    phoneNumber?: string;
+    [key: string]: unknown;
+  };
+}
+
+export interface PushNotification extends Notification {
+  data: {
+    deviceToken?: string;
+    [key: string]: unknown;
+  };
+}
+
+export interface InAppNotification extends Notification {
+  // In-app often just uses the base fields or specific UI data
+  data?: Record<string, unknown>;
 }
 
 export interface NotificationInput {
   type: string;
   title: string;
   body: string;
+  text?: string;
+  html?: string;
   userId: string;
   groupId?: string;
   data?: Record<string, unknown>;
   priority?: NotificationPriority;
   category?: string;
-  channels: ChannelType[];
+  channels?: ChannelType[];
   scheduledFor?: Date;
   expiresAt?: Date;
   actions?: NotificationAction[];
-  
+
   // Template support
   template?: string;
 }
@@ -76,15 +106,17 @@ export interface NotificationMulticastInput {
   type: string;
   title: string;
   body: string;
+  text?: string;
+  html?: string;
   userIds: string[];
   data?: Record<string, unknown>;
   priority?: NotificationPriority;
   category?: string;
-  channels: ChannelType[];
+  channels?: ChannelType[];
   scheduledFor?: Date;
   expiresAt?: Date;
   actions?: NotificationAction[];
-  
+
   // Template support
   template?: string;
 }
@@ -155,6 +187,8 @@ export interface NotificationTemplate {
   defaults: {
     title: string | ((data: any) => string);
     body: string | ((data: any) => string);
+    text?: string | ((data: any) => string);
+    html?: string | ((data: any) => string);
     channels: ChannelType[];
     priority: NotificationPriority;
     category?: string;
@@ -180,7 +214,7 @@ export interface DigestConfig {
 
 export interface NotificationMiddleware {
   name: string;
-  
+
   // Lifecycle hooks
   beforeSend?(notification: Notification): Promise<Notification | null>; // null = skip
   afterSend?(notification: Notification): Promise<void>;
@@ -196,25 +230,25 @@ export interface StorageAdapter {
   save(notification: Notification): Promise<void>;
   saveBatch(notifications: Notification[]): Promise<void>;
   findById(id: string): Promise<Notification | null>;
-  
+
   // Queries
   findByUser(userId: string, filters?: NotificationFilters): Promise<Notification[]>;
   countUnread(userId: string): Promise<number>;
-  
+
   // Updates
   markAsRead(id: string): Promise<void>;
   markAllAsRead(userId: string): Promise<void>;
   markAsUnread(id: string): Promise<void>;
   markAllAsUnread(userId: string): Promise<void>;
   delete(id: string): Promise<void>;
-  
+
   // Preferences
   getPreferences(userId: string): Promise<NotificationPreferences>;
   savePreferences(userId: string, prefs: NotificationPreferences): Promise<void>;
-  
+
   // Cleanup
   deleteExpired(): Promise<number>;
-  
+
   // Delivery receipts
   saveReceipt?(receipt: DeliveryReceipt): Promise<void>;
   getReceipts?(notificationId: string): Promise<DeliveryReceipt[]>;
@@ -222,16 +256,19 @@ export interface StorageAdapter {
 
 export interface TransportAdapter {
   name: ChannelType;
-  
+
   // Core delivery
   send(notification: Notification, preferences: NotificationPreferences): Promise<DeliveryReceipt>;
-  
+
   // Optional: batch support
   sendBatch?(notifications: Notification[], preferences: NotificationPreferences): Promise<DeliveryReceipt[]>;
-  
+
+  // Optional: multicast support
+  sendMulticast?(notifications: Notification[], preferences: NotificationPreferences): Promise<DeliveryReceipt[]>;
+
   // Validation
   canSend(notification: Notification, preferences: NotificationPreferences): boolean;
-  
+
   // Health check
   healthCheck?(): Promise<boolean>;
 }
@@ -241,15 +278,15 @@ export interface QueueAdapter {
   enqueue(notification: Notification): Promise<void>;
   enqueueBatch(notifications: Notification[]): Promise<void>;
   enqueueDelayed(notification: Notification, delay: number): Promise<void>;
-  
+
   // Dequeue
   dequeue(): Promise<Notification | null>;
   dequeueBatch(count: number): Promise<Notification[]>;
-  
+
   // Management
   getQueueSize(): Promise<number>;
   clear(): Promise<void>;
-  
+
   // Lifecycle
   start(): Promise<void>;
   stop(): Promise<void>;
@@ -263,14 +300,14 @@ export interface NotificationConfig {
   storage: StorageAdapter;
   transports: TransportAdapter[];
   queue?: QueueAdapter;
-  
+
   // Worker settings
   workers?: {
     enabled?: boolean;
     concurrency?: number;
     pollInterval?: number; // ms
   };
-  
+
   // Retry settings
   retry?: {
     maxAttempts?: number;
@@ -278,14 +315,14 @@ export interface NotificationConfig {
     initialDelay?: number; // ms
     maxDelay?: number; // ms
   };
-  
+
   // Cleanup settings
   cleanup?: {
     enabled?: boolean;
     interval?: number; // ms
     retentionDays?: number;
   };
-  
+
   // Middleware
   middleware?: NotificationMiddleware[];
 }

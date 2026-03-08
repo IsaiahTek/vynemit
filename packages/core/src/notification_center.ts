@@ -1,4 +1,4 @@
-import { NotificationConfig, NotificationInput, NotificationFilters, NotificationPreferences, Unsubscribe, ChannelType, DeliveryReceipt, DigestConfig, NotificationEvent, NotificationMiddleware, NotificationPriority, NotificationStats, NotificationStatus, NotificationTemplate, QueueAdapter, StorageAdapter, TransportAdapter, Notification, NotificationMulticastInput } from "./types";
+import { NotificationConfig, NotificationInput, NotificationFilters, NotificationPreferences, Unsubscribe, ChannelType, DeliveryReceipt, DigestConfig, NotificationEvent, NotificationMiddleware, NotificationPriority, NotificationStats, NotificationStatus, NotificationStatus, NotificationTemplate, QueueAdapter, StorageAdapter, TransportAdapter, Notification, NotificationMulticastInput, EmailNotification, SmsNotification, PushNotification, InAppNotification } from "./types";
 // ============================================================================
 // NOTIFICATION CENTER IMPLEMENTATION
 // ============================================================================
@@ -85,14 +85,57 @@ export class NotificationCenter {
   }
 
   async sendMulticast(input: NotificationMulticastInput): Promise<Notification[]> {
-    const notificationInputs: NotificationInput[] = [];
-    for (const userId of input.userIds) {
-      notificationInputs.push({
-        ...input,
-        userId
-      });
+    // 1. Build and process notifications
+    const notifications = await Promise.all(input.userIds.map(async (userId) => {
+      const notificationInput: NotificationInput = { ...input, userId };
+      let notification: Notification | null = this.buildNotification(notificationInput);
+      notification = await this.applyBeforeSendMiddleware(notification);
+      return notification;
+    }));
+
+    const validNotifications = notifications.filter((n): n is Notification => n !== null);
+    if (validNotifications.length === 0) return [];
+
+    // 2. Save all to storage
+    await this.storage.saveBatch(validNotifications);
+
+    // 3. Dispatch to transports
+    const channels = input.channels !== undefined ? input.channels : Array.from(this.transports.keys());
+    for (const channel of channels) {
+      const transport = this.transports.get(channel);
+      if (!transport) continue;
+
+      try {
+        if (transport.sendMulticast) {
+          // Optimization: Resolve tokens for push/sms notifications if not present
+          if (channel === 'push' || channel === 'sms') {
+            await Promise.all(validNotifications.map(async (n) => {
+              const field = channel === 'push' ? 'deviceToken' : 'phoneNumber';
+              if (!(n.data as any)?.[field]) {
+                const prefs = await this.storage.getPreferences(n.userId);
+                if (prefs.data?.[field]) {
+                  n.data = { ...(n.data || {}), [field]: prefs.data[field] };
+                }
+              }
+            }));
+          }
+
+          const receipts = await transport.sendMulticast(validNotifications, {} as NotificationPreferences);
+          if (this.storage.saveReceipt) {
+            await Promise.all(receipts.map(r => this.storage.saveReceipt!(r)));
+          }
+        } else {
+          // Fallback to individual sends
+          await Promise.all(validNotifications.map(n => this.sendNow(n)));
+        }
+      } catch (error) {
+        // Fallback for this channel if multicast fails or other error
+        console.error(`Multicast failed for channel ${channel}:`, error);
+        await Promise.all(validNotifications.map(n => this.applyErrorMiddleware(error as Error, n)));
+      }
     }
-    return this.sendBatch(notificationInputs);
+
+    return validNotifications;
   }
 
   async schedule(input: NotificationInput, when: Date): Promise<string> {
@@ -370,7 +413,7 @@ export class NotificationCenter {
     callback: (count: number, userId: string) => void
   ): Unsubscribe {
     const sid = String(userId);
-    if (!this.unreadSubscribers.has(sid)) {
+    if (!unreadSubscribers.has(sid)) {
       this.unreadSubscribers.set(sid, new Set());
     }
     this.unreadSubscribers.get(sid)!.add(callback);
@@ -462,6 +505,8 @@ export class NotificationCenter {
   // ========== PRIVATE METHODS ==========
 
   private buildNotification(input: NotificationInput): Notification {
+    const allChannels = Array.from(this.transports.keys());
+
     // If using template, merge with template defaults
     if (input.template) {
       const template = this.templates.get(input.template);
@@ -477,11 +522,21 @@ export class NotificationCenter {
         ? template.defaults.body(input.data)
         : template.defaults.body;
 
+      const text = input.text || (typeof template.defaults.text === 'function'
+        ? template.defaults.text(input.data)
+        : template.defaults.text);
+
+      const html = input.html || (typeof template.defaults.html === 'function'
+        ? template.defaults.html(input.data)
+        : template.defaults.html);
+
       return {
         id: this.generateId(),
         type: input.type || template.type,
         title: input.title || title,
         body: input.body || body,
+        text,
+        html,
         data: input.data,
         userId: input.userId,
         groupId: input.groupId,
@@ -495,7 +550,9 @@ export class NotificationCenter {
             ? new Date(Date.now() + template.defaults.expiresIn)
             : undefined
         ),
-        channels: input.channels.length ? input.channels : template.defaults.channels,
+        // If channels are explicitly provided (even if empty), use them. 
+        // Otherwise use template defaults.
+        channels: input.channels !== undefined ? input.channels : template.defaults.channels,
         actions: input.actions
       };
     }
@@ -506,6 +563,8 @@ export class NotificationCenter {
       type: input.type,
       title: input.title,
       body: input.body,
+      text: input.text,
+      html: input.html,
       data: input.data,
       userId: input.userId,
       groupId: input.groupId,
@@ -515,7 +574,9 @@ export class NotificationCenter {
       createdAt: new Date(),
       scheduledFor: input.scheduledFor,
       expiresAt: input.expiresAt,
-      channels: input.channels,
+      // If channels are explicitly provided (even if empty), use them. 
+      // Otherwise default to all registered transports.
+      channels: input.channels !== undefined ? input.channels : allChannels,
       actions: input.actions
     };
   }
@@ -531,12 +592,14 @@ export class NotificationCenter {
           return null;
         }
 
-        if (!transport.canSend(notification, prefs)) {
+        const channelNotification = this.castNotification(notification, channel);
+
+        if (!transport.canSend(channelNotification, prefs)) {
           return null;
         }
 
         try {
-          const receipt = await transport.send(notification, prefs);
+          const receipt = await transport.send(channelNotification, prefs);
           if (this.storage.saveReceipt) {
             await this.storage.saveReceipt(receipt);
           }
@@ -572,8 +635,10 @@ export class NotificationCenter {
     // Apply middleware (afterSend)
     await this.applyAfterSendMiddleware(notification);
 
-    // Notify subscribers
-    this.notifySubscribers(notification);
+    // Notify subscribers (in-app)
+    if (notification.channels.includes('inapp')) {
+      this.notifySubscribers(notification);
+    }
     this.notifyEventSubscribers({
       type: 'sent',
       notification,
@@ -581,6 +646,21 @@ export class NotificationCenter {
     });
 
     await this.storage.save(notification);
+  }
+
+  private castNotification(notification: Notification, channel: ChannelType): any {
+    switch (channel) {
+      case 'email':
+        return notification as EmailNotification;
+      case 'sms':
+        return notification as SmsNotification;
+      case 'push':
+        return notification as PushNotification;
+      case 'inapp':
+        return notification as InAppNotification;
+      default:
+        return notification;
+    }
   }
 
   private startWorker(): void {
