@@ -1,0 +1,12 @@
+import { NotificationFilters, NotificationPreferences } from './types';
+export declare function fetchNotifications(filters?: NotificationFilters): Promise<void>;
+export declare function fetchUnreadCount(): Promise<void>;
+export declare function fetchStats(): Promise<void>;
+export declare function fetchPreferences(): Promise<void>;
+export declare function markAsRead(notificationId: string): Promise<void>;
+export declare function markAllAsRead(): Promise<void>;
+export declare function markAsUnread(notificationId: string): Promise<void>;
+export declare function markAllAsUnread(): Promise<void>;
+export declare function deleteNotification(notificationId: string): Promise<void>;
+export declare function deleteAll(): Promise<void>;
+export declare function updatePreferences(prefs: Partial<NotificationPreferences>): Promise<void>;
