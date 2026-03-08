@@ -1,4 +1,7 @@
 export * from '@notifyc/core';
+export * from '@notifyc/core/dist/adapters/console_transport_adapter';
+export * from '@notifyc/core/dist/adapters/memory_queue_adapter';
+export * from '@notifyc/core/dist/adapters/memory_storage_adapter';
 export * from './controllers/notification.controller';
 export * from './gateways/notifications-websocket.gateway';
 export * from './services/notification.service';
