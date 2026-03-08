@@ -1,0 +1,66 @@
+{
+  "name": "@synq/notifications-core",
+  "version": "1.0.0",
+  "description": "Framework-agnostic notification system with unified dispatch, storage, and transport layers",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts --clean",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "lint": "eslint src --ext .ts",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "notifications",
+    "push",
+    "email",
+    "sms",
+    "in-app",
+    "notification-system",
+    "event-driven",
+    "queue",
+    "realtime",
+    "framework-agnostic"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/synq-notifications"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/synq-notifications/issues"
+  },
+  "homepage": "https://github.com/yourusername/synq-notifications#readme",
+  "devDependencies": {
+    "@types/jest": "^29.5.0",
+    "@types/node": "^24.9.2",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.40.0",
+    "jest": "^29.5.0",
+    "prettier": "^3.0.0",
+    "ts-jest": "^29.1.0",
+    "tsup": "^7.0.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
