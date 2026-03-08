@@ -1,1 +1,7 @@
-node_modules\ndist\n.DS_Store\n*.log\n/tmp/
+node_modules
+dist
+.DS_Store
+*.log
+/tmp/
+packages/*/node_modules
+packages/*/dist
