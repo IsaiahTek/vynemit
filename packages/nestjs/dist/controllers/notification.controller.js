@@ -1,7 +1,4 @@
 "use strict";
-// ============================================================================
-// REST API CONTROLLER
-// ============================================================================
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -39,7 +36,6 @@ let NotificationsController = class NotificationsController {
             });
             const unsubscribeNotification = this.notificationsService.subscribe(userId, (notification) => {
                 console.log(`ATTEMPTING TO EMIT Notification sent for user ${notification.userId}:`, notification);
-                // Stringify the IDs to handle cases where userId is an ObjectId or other complex type
                 if (String(notification.userId) === String(userId)) {
                     console.log(`Emitting notification to client ${userId}:`, notification);
                     push('notification', notification);
@@ -236,3 +232,4 @@ exports.NotificationsController = NotificationsController = __decorate([
     (0, common_1.Controller)('notifications'),
     __metadata("design:paramtypes", [notification_service_1.NotificationsService])
 ], NotificationsController);
+//# sourceMappingURL=notification.controller.js.map

@@ -89,7 +89,6 @@ let NotificationsModule = NotificationsModule_1 = class NotificationsModule {
                 return center;
             },
         };
-        // Factory provider for NotificationsService that also sets the global singleton
         const ServiceProvider = {
             provide: notification_service_1.NotificationsService,
             useFactory: () => {
@@ -109,7 +108,6 @@ let NotificationsModule = NotificationsModule_1 = class NotificationsModule {
             : [];
         console.log('📦 Controllers registered:', controllers.length);
         const exports = [notification_service_1.NotificationsService];
-        // Add Gateway as a simple class provider - it will use the global getter
         if (options.enableWebSocket !== false) {
             console.log('📦 Adding WebSocket Gateway...');
             providers.push(notifications_websocket_gateway_1.NotificationsGateway);
@@ -170,3 +168,4 @@ exports.NotificationsModule = NotificationsModule = NotificationsModule_1 = __de
     (0, common_1.Global)(),
     (0, common_1.Module)({})
 ], NotificationsModule);
+//# sourceMappingURL=module.js.map

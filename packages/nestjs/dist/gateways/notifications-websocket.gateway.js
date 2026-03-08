@@ -30,7 +30,6 @@ let NotificationsGateway = NotificationsGateway_1 = class NotificationsGateway {
         this.logger.log(`🚀 Server instance available: ${!!server}`);
         this.logger.log(`🚀 Server.sockets available: ${!!server?.sockets}`);
         this.logger.log(`🚀 this.server available: ${!!this.server}`);
-        // Force set the server if needed
         if (server && !this.server) {
             this.server = server;
             this.logger.log('🚀 Server manually assigned');
@@ -38,10 +37,8 @@ let NotificationsGateway = NotificationsGateway_1 = class NotificationsGateway {
     }
     onModuleInit() {
         this.logger.log('WebSocket gateway initialization start.');
-        // Get the service instance from the global singleton
         this.notificationsService = (0, module_1.getNotificationsServiceInstance)();
         this.logger.log('✅ NotificationsService retrieved from singleton');
-        // 1. Subscribe to the Service's internal event emitter for immediate broadcasts.
         const unsubscribeNotificationSent = this.notificationsService.onNotificationSent((notification) => {
             this.logger.verbose(`Local Emitter triggered for new notification: ${notification.id} (User: ${notification.userId})`);
             this.broadcastToUser(notification.userId, 'notification', {
@@ -50,7 +47,6 @@ let NotificationsGateway = NotificationsGateway_1 = class NotificationsGateway {
             });
         });
         this.cleanupCallbacks.push(unsubscribeNotificationSent);
-        // 2. Subscribe to unread count changes for all users
         const unsubscribeUnreadCount = this.notificationsService.onUnreadCountChange('*', (count, userId) => {
             this.logger.verbose(`Unread count changed for user ${userId}: ${count}`);
             this.broadcastToUser(userId, 'unread-count', {
@@ -75,14 +71,11 @@ let NotificationsGateway = NotificationsGateway_1 = class NotificationsGateway {
         }
         const normalizedUserId = userId.trim();
         this.logger.log(`Client connected: ${client.id} (userId: ${normalizedUserId})`);
-        // Track this client for this user
         if (!this.userToClients.has(normalizedUserId)) {
             this.userToClients.set(normalizedUserId, new Set());
         }
         this.userToClients.get(normalizedUserId).add(client.id);
-        // Store userId on socket for easy access
         client.userId = normalizedUserId;
-        // Send initial data immediately upon connection
         this.sendInitialData(client, normalizedUserId);
     }
     handleDisconnect(client) {
@@ -90,7 +83,6 @@ let NotificationsGateway = NotificationsGateway_1 = class NotificationsGateway {
         if (!userId)
             return;
         this.logger.log(`Client disconnected: ${client.id} (userId: ${userId})`);
-        // Remove client from user's client list
         const clients = this.userToClients.get(userId);
         if (clients) {
             clients.delete(client.id);
@@ -111,7 +103,6 @@ let NotificationsGateway = NotificationsGateway_1 = class NotificationsGateway {
             return;
         }
         this.logger.log(`Broadcasting ${event} to ${clientIds.size} client(s) for user ${userId}`);
-        // Use the namespace's sockets collection to emit to specific clients
         clientIds.forEach(clientId => {
             const socket = this.server.sockets.get(clientId);
             if (socket) {
@@ -119,12 +110,10 @@ let NotificationsGateway = NotificationsGateway_1 = class NotificationsGateway {
                 this.logger.verbose(`✅ SENT ${event} to client: ${clientId} (User: ${userId})`);
             }
             else {
-                // Clean up missing socket ID
                 clientIds.delete(clientId);
                 this.logger.warn(`Socket ID ${clientId} not found for user ${userId}. Cleaning up map.`);
             }
         });
-        // Post-cleanup check
         if (clientIds.size === 0) {
             this.userToClients.delete(userId);
         }
@@ -209,3 +198,4 @@ exports.NotificationsGateway = NotificationsGateway = NotificationsGateway_1 = _
     }),
     __metadata("design:paramtypes", [])
 ], NotificationsGateway);
+//# sourceMappingURL=notifications-websocket.gateway.js.map

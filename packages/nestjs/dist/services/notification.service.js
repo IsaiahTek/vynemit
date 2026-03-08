@@ -1,7 +1,4 @@
 "use strict";
-// ============================================================================
-// NOTIFICATION SERVICE
-// ============================================================================
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -26,8 +23,6 @@ let NotificationsService = NotificationsService_1 = class NotificationsService {
     }
     async onModuleInit() {
         this.logger.log('NotificationsService: onModuleInit called. Retrieving NotificationCenter instance...');
-        // Wait a bit to ensure the initialization provider has run
-        // This is a safety mechanism
         await new Promise(resolve => setTimeout(resolve, 100));
         try {
             this.notificationCenter = (0, module_1.getNotificationCenterInstance)();
@@ -46,12 +41,10 @@ let NotificationsService = NotificationsService_1 = class NotificationsService {
     }
     getCenter() {
         if (!this.notificationCenter) {
-            // Fallback: try to get it again
             this.notificationCenter = (0, module_1.getNotificationCenterInstance)();
         }
         return this.notificationCenter;
     }
-    // ========== EVENT EMITTER (for WebSocket integration) ==========
     onNotificationSent(callback) {
         this.eventEmitter.on('notification:sent', callback);
         return () => this.eventEmitter.off('notification:sent', callback);
@@ -60,7 +53,6 @@ let NotificationsService = NotificationsService_1 = class NotificationsService {
         this.eventEmitter.on('unread:changed', callback);
         return () => this.eventEmitter.off('unread:changed', callback);
     }
-    // ========== SEND OPERATIONS ==========
     async send(input) {
         console.log("🔔 NotificationsService.send() CALLED");
         console.log("📋 Input:", JSON.stringify(input, null, 2));
@@ -71,7 +63,6 @@ let NotificationsService = NotificationsService_1 = class NotificationsService {
             console.log("✅ NotificationCenter instance obtained");
             notification = await center.send(input);
             console.log("✅ Notification sent successfully:", notification.id);
-            // Emit the local event for the WebSocket to pick up
             this.eventEmitter.emit('notification:sent', notification);
             console.log("✅ Event emitted: notification:sent");
         }
@@ -103,7 +94,6 @@ let NotificationsService = NotificationsService_1 = class NotificationsService {
         const center = this.getCenter();
         return center.schedule(input, when);
     }
-    // ========== QUERY OPERATIONS ==========
     async getForUser(userId, filters) {
         const center = this.getCenter();
         return center.getForUser(userId, filters);
@@ -120,7 +110,6 @@ let NotificationsService = NotificationsService_1 = class NotificationsService {
         const center = this.getCenter();
         return center.getStats(userId);
     }
-    // ========== STATE OPERATIONS ==========
     async markAsRead(notificationId) {
         const center = this.getCenter();
         const notification = await center.getById(notificationId);
@@ -187,7 +176,6 @@ let NotificationsService = NotificationsService_1 = class NotificationsService {
         const center = this.getCenter();
         return center.deleteAll(userId);
     }
-    // ========== PREFERENCES ==========
     async getPreferences(userId) {
         const center = this.getCenter();
         return center.getPreferences(userId);
@@ -196,12 +184,10 @@ let NotificationsService = NotificationsService_1 = class NotificationsService {
         const center = this.getCenter();
         return center.updatePreferences(userId, prefs);
     }
-    // ========== TEMPLATES ==========
     registerTemplate(template) {
         const center = this.getCenter();
         center.registerTemplate(template);
     }
-    // ========== SUBSCRIPTIONS ==========
     subscribe(userId, callback) {
         const center = this.getCenter();
         return center.subscribe(userId, callback);
@@ -210,7 +196,6 @@ let NotificationsService = NotificationsService_1 = class NotificationsService {
         const center = this.getCenter();
         return center.onUnreadCountChange(userId, callback);
     }
-    // ========== HEALTH ==========
     async healthCheck() {
         const center = this.getCenter();
         return center.healthCheck();
@@ -221,3 +206,4 @@ exports.NotificationsService = NotificationsService = NotificationsService_1 = _
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [])
 ], NotificationsService);
+//# sourceMappingURL=notification.service.js.map

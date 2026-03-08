@@ -21,4 +21,4 @@ __exportStar(require("./services/notification.service"), exports);
 __exportStar(require("./types/types"), exports);
 __exportStar(require("./decorators"), exports);
 __exportStar(require("./module"), exports);
-// export { NotificationsGatewayModule } from './module';
+//# sourceMappingURL=index.js.map
