@@ -15,9 +15,6 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 __exportStar(require("@notifyc/core"), exports);
-__exportStar(require("@notifyc/core/dist/adapters/console_transport_adapter"), exports);
-__exportStar(require("@notifyc/core/dist/adapters/memory_queue_adapter"), exports);
-__exportStar(require("@notifyc/core/dist/adapters/memory_storage_adapter"), exports);
 __exportStar(require("./controllers/notification.controller"), exports);
 __exportStar(require("./gateways/notifications-websocket.gateway"), exports);
 __exportStar(require("./services/notification.service"), exports);
