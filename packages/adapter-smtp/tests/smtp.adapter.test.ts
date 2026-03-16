@@ -6,7 +6,7 @@ describe('SmtpProvider', () => {
     });
 
     it('should have the correct channel name', () => {
-        const provider = new SmtpProvider('host', 587, 'user', 'pass', 'from@example.com');
+        const provider = new SmtpProvider({host:'host', port: 587, user: 'user', pass: 'pass', fromEmail: 'from@example.com'});
         expect(provider.name).toBe('email');
     });
 });
