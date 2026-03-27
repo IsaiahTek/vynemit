@@ -1,0 +1,25 @@
+name: notifyc_flutter
+description: A powerful, lightweight Flutter client for the notifyc notification system.
+version: 0.1.0
+repository: https://github.com/IsaiahTek/notifyc
+homepage: https://github.com/IsaiahTek/notifyc
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+  flutter: ">=3.10.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  http: ^1.1.0
+  socket_io_client: ^2.0.3
+  intl: ^0.18.1
+  provider: ^6.1.1 # For ChangeNotifier integration
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  mocktail: ^1.0.1
+
+flutter:
+  uses-material-design: true
