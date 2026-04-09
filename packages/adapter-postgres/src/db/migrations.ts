@@ -1,11 +1,10 @@
-
 // ============================================================================
 // SQL MIGRATIONS
 // ============================================================================
 
 export const MIGRATIONS = {
-  notifications: `
-    CREATE TABLE IF NOT EXISTS notif_notifications (
+  notifications: (tablePrefix: string) => `
+    CREATE TABLE IF NOT EXISTS ${tablePrefix}notifications (
       id VARCHAR(255) PRIMARY KEY,
       type VARCHAR(100) NOT NULL,
       title VARCHAR(500) NOT NULL,
@@ -32,16 +31,16 @@ export const MIGRATIONS = {
       CONSTRAINT valid_priority CHECK (priority IN ('low', 'normal', 'high', 'urgent'))
     );
     
-    CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notif_notifications(user_id);
-    CREATE INDEX IF NOT EXISTS idx_notifications_status ON notif_notifications(status);
-    CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON notif_notifications(created_at DESC);
-    CREATE INDEX IF NOT EXISTS idx_notifications_user_status ON notif_notifications(user_id, status);
-    CREATE INDEX IF NOT EXISTS idx_notifications_expires_at ON notif_notifications(expires_at) WHERE expires_at IS NOT NULL;
-    CREATE INDEX IF NOT EXISTS idx_notifications_scheduled_for ON notif_notifications(scheduled_for) WHERE scheduled_for IS NOT NULL;
+    CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON ${tablePrefix}notifications(user_id);
+    CREATE INDEX IF NOT EXISTS idx_notifications_status ON ${tablePrefix}notifications(status);
+    CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON ${tablePrefix}notifications(created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_notifications_user_status ON ${tablePrefix}notifications(user_id, status);
+    CREATE INDEX IF NOT EXISTS idx_notifications_expires_at ON ${tablePrefix}notifications(expires_at) WHERE expires_at IS NOT NULL;
+    CREATE INDEX IF NOT EXISTS idx_notifications_scheduled_for ON ${tablePrefix}notifications(scheduled_for) WHERE scheduled_for IS NOT NULL;
   `,
   
-  preferences: `
-    CREATE TABLE IF NOT EXISTS notif_preferences (
+  preferences: (tablePrefix: string) => `
+    CREATE TABLE IF NOT EXISTS ${tablePrefix}preferences (
       user_id VARCHAR(255) PRIMARY KEY,
       channels JSONB NOT NULL DEFAULT '{}',
       global_mute BOOLEAN DEFAULT FALSE,
@@ -49,11 +48,11 @@ export const MIGRATIONS = {
       updated_at TIMESTAMP DEFAULT NOW()
     );
     
-    CREATE INDEX IF NOT EXISTS idx_preferences_updated_at ON notif_preferences(updated_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_preferences_updated_at ON ${tablePrefix}preferences(updated_at DESC);
   `,
   
-  receipts: `
-    CREATE TABLE IF NOT EXISTS notif_delivery_receipts (
+  receipts: (tablePrefix: string) => `
+    CREATE TABLE IF NOT EXISTS ${tablePrefix}delivery_receipts (
       id SERIAL PRIMARY KEY,
       notification_id VARCHAR(255) NOT NULL,
       channel VARCHAR(50) NOT NULL,
@@ -65,11 +64,11 @@ export const MIGRATIONS = {
       metadata JSONB,
       
       CONSTRAINT fk_notification FOREIGN KEY (notification_id) 
-        REFERENCES notif_notifications(id) ON DELETE CASCADE,
+        REFERENCES ${tablePrefix}notifications(id) ON DELETE CASCADE,
       CONSTRAINT valid_receipt_status CHECK (status IN ('pending', 'sent', 'delivered', 'failed', 'bounced'))
     );
     
-    CREATE INDEX IF NOT EXISTS idx_receipts_notification_id ON notif_delivery_receipts(notification_id);
-    CREATE INDEX IF NOT EXISTS idx_receipts_status ON notif_delivery_receipts(status);
+    CREATE INDEX IF NOT EXISTS idx_receipts_notification_id ON ${tablePrefix}delivery_receipts(notification_id);
+    CREATE INDEX IF NOT EXISTS idx_receipts_status ON ${tablePrefix}delivery_receipts(status);
   `
 };

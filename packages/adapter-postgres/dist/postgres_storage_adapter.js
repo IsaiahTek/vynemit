@@ -32,9 +32,9 @@ class PostgresStorageAdapter {
         const client = await this.pool.connect();
         try {
             await client.query(`SET search_path TO ${this.schema}`);
-            await client.query(migrations_1.MIGRATIONS.notifications);
-            await client.query(migrations_1.MIGRATIONS.preferences);
-            await client.query(migrations_1.MIGRATIONS.receipts);
+            await client.query(migrations_1.MIGRATIONS.notifications(this.tablePrefix));
+            await client.query(migrations_1.MIGRATIONS.preferences(this.tablePrefix));
+            await client.query(migrations_1.MIGRATIONS.receipts(this.tablePrefix));
         }
         finally {
             client.release();

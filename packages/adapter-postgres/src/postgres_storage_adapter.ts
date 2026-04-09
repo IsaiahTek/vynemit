@@ -56,9 +56,9 @@ export class PostgresStorageAdapter implements StorageAdapter {
     const client = await this.pool.connect();
     try {
       await client.query(`SET search_path TO ${this.schema}`);
-      await client.query(MIGRATIONS.notifications);
-      await client.query(MIGRATIONS.preferences);
-      await client.query(MIGRATIONS.receipts);
+      await client.query(MIGRATIONS.notifications(this.tablePrefix));
+      await client.query(MIGRATIONS.preferences(this.tablePrefix));
+      await client.query(MIGRATIONS.receipts(this.tablePrefix));
     } finally {
       client.release();
     }

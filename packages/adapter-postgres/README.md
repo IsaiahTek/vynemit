@@ -1,14 +1,14 @@
-# @notifyc/adapter-postgres 🐘
+# @notifyc/adapter-postgres
 
 PostgreSQL storage adapter for NotifyC. Perfect for production environments requiring persistence and complex queries.
 
-## 📦 Installation
+## Installation
 
 ```bash
 npm install @notifyc/adapter-postgres pg
 ```
 
-## 🎯 Usage
+## Usage
 
 ```typescript
 import { NotificationCenter } from '@notifyc/core';
