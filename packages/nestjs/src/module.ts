@@ -76,8 +76,8 @@ export function setNotificationsServiceInstance(service: NotificationsService): 
 export class NotificationsModule {
 
     static forRoot(options: NotificationsModuleOptions): DynamicModule {
-        console.log('📦 NotificationsModule.forRoot() called');
-        console.log('📦 Options:', {
+        console.log('NotificationsModule.forRoot() called');
+        console.log('Options:', {
             hasStorage: !!options.storage,
             hasQueue: !!options.queue,
             hasTransports: !!options.transports,
@@ -112,19 +112,19 @@ export class NotificationsModule {
             ServiceProvider,
         ];
 
-        console.log('📦 Providers registered:', providers.length);
+        console.log('Providers registered:', providers.length);
 
         const controllers = options.enableRestApi !== false
             ? [NotificationsController]
             : [];
 
-        console.log('📦 Controllers registered:', controllers.length);
+        console.log('Controllers registered:', controllers.length);
 
         const exports: any[] = [NotificationsService];
 
         // Add Gateway as a simple class provider - it will use the global getter
         if (options.enableWebSocket !== false) {
-            console.log('📦 Adding WebSocket Gateway...');
+            console.log('Adding WebSocket Gateway...');
             providers.push(NotificationsGateway);
         }
 

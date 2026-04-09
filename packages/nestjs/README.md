@@ -2,7 +2,7 @@
 
 Complete guide for integrating Synq Notifications with **NestJS** and **Express.js**.
 
-## 📦 Installation
+## Installation
 
 ### NestJS
 
@@ -19,7 +19,7 @@ npm install @notifyc/express @notifyc/core
 npm install ws
 ```
 
-## 🎯 NestJS Integration
+## NestJS Integration
 
 ### Basic Setup
 

@@ -71,8 +71,8 @@ function setNotificationsServiceInstance(service) {
 }
 let NotificationsModule = NotificationsModule_1 = class NotificationsModule {
     static forRoot(options) {
-        console.log('📦 NotificationsModule.forRoot() called');
-        console.log('📦 Options:', {
+        console.log('NotificationsModule.forRoot() called');
+        console.log('Options:', {
             hasStorage: !!options.storage,
             hasQueue: !!options.queue,
             hasTransports: !!options.transports,
@@ -102,14 +102,14 @@ let NotificationsModule = NotificationsModule_1 = class NotificationsModule {
             InitializationProvider,
             ServiceProvider,
         ];
-        console.log('📦 Providers registered:', providers.length);
+        console.log('Providers registered:', providers.length);
         const controllers = options.enableRestApi !== false
             ? [notification_controller_1.NotificationsController]
             : [];
-        console.log('📦 Controllers registered:', controllers.length);
+        console.log('Controllers registered:', controllers.length);
         const exports = [notification_service_1.NotificationsService];
         if (options.enableWebSocket !== false) {
-            console.log('📦 Adding WebSocket Gateway...');
+            console.log('Adding WebSocket Gateway...');
             providers.push(notifications_websocket_gateway_1.NotificationsGateway);
         }
         console.log('✅ NotificationsModule.forRoot() configuration complete');
