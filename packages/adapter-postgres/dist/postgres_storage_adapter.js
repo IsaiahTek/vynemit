@@ -12,6 +12,9 @@ const migrations_1 = require("./db/migrations");
 // ============================================================================
 class PostgresStorageAdapter {
     constructor(config) {
+        if (!config) {
+            throw new Error('PostgresStorageAdapter requires configuration (pool, connectionString, or poolConfig). If you are using a framework like NestJS, ensure this class is provided correctly via a factory.');
+        }
         if (config.pool) {
             this.pool = config.pool;
         }

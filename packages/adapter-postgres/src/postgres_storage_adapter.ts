@@ -36,6 +36,10 @@ export class PostgresStorageAdapter implements StorageAdapter {
   private tablePrefix: string;
 
   constructor(config: PostgresStorageConfig) {
+    if (!config) {
+      throw new Error('PostgresStorageAdapter requires configuration (pool, connectionString, or poolConfig). If you are using a framework like NestJS, ensure this class is provided correctly via a factory.');
+    }
+
     if (config.pool) {
       this.pool = config.pool;
     } else if (config.connectionString) {
