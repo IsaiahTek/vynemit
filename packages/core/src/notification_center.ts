@@ -54,18 +54,18 @@ export class NotificationCenter {
     try {
       // If queue is available, enqueue. Otherwise send directly
       if (this.queue) {
-        console.log("📦 Notification queued");
+        console.log("Notification queued");
         if (notification.scheduledFor) {
-          console.log("📦 Notification scheduled for: " + notification.scheduledFor.toLocaleDateString());
+          console.log("Notification scheduled for: " + notification.scheduledFor.toLocaleDateString());
           const delay = notification.scheduledFor.getTime() - Date.now();
-          console.log("📦 Notification delay: " + delay + "ms");
+          console.log("Notification delay: " + delay + "ms");
           await this.queue.enqueueDelayed(notification, delay);
         } else {
-          console.log("📦 Notification sent directly after enqueue");
+          console.log("Notification sent directly after enqueue");
           await this.queue.enqueue(notification);
         }
       } else {
-        console.log("📦 Notification sent directly in sendNow");
+        console.log("Notification sent directly in sendNow");
         await this.sendNow(notification);
       }
 
@@ -448,6 +448,11 @@ export class NotificationCenter {
     }
 
     this.isRunning = true;
+
+    // Initialize storage if supported
+    if (this.storage.initialize) {
+      await this.storage.initialize();
+    }
 
     // Start queue if available
     if (this.queue) {

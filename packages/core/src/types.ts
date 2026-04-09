@@ -226,6 +226,9 @@ export interface NotificationMiddleware {
 // ============================================================================
 
 export interface StorageAdapter {
+  // Initialization
+  initialize?(): Promise<void>;
+
   // CRUD
   save(notification: Notification): Promise<void>;
   saveBatch(notifications: Notification[]): Promise<void>;

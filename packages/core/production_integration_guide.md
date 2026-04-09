@@ -2,7 +2,7 @@
 
 This guide shows you how to set up a complete production notification system using all the adapters we've built.
 
-## 📦 Installation
+## Installation
 
 ```bash
 # Core

@@ -5,14 +5,14 @@
 ## Features
 
 ✨ **Unified Notification Model** - Single interface for in-app, push, email, SMS, and webhooks  
-🎯 **Event-Based Dispatch** - Reactive system with real-time subscriptions  
+**Event-Based Dispatch** - Reactive system with real-time subscriptions  
 📊 **Read/Unread Tracking** - Built-in state management  
 🎛️ **Channel Filters** - User preferences for notification channels  
 ⚡ **Queue Support** - Redis, BullMQ, or in-memory queues  
 🔌 **Pluggable Architecture** - Swap storage and transport adapters  
 🎨 **Template System** - Reusable notification templates  
 🔄 **Middleware Support** - Rate limiting, deduplication, analytics  
-📦 **Zero Dependencies** - Lightweight core with optional adapters  
+**Zero Dependencies** - Lightweight core with optional adapters  
 
 ## Installation
 

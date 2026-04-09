@@ -155,6 +155,7 @@ interface NotificationMiddleware {
     onError?(error: Error, notification: Notification): Promise<void>;
 }
 interface StorageAdapter {
+    initialize?(): Promise<void>;
     save(notification: Notification): Promise<void>;
     saveBatch(notifications: Notification[]): Promise<void>;
     findById(id: string): Promise<Notification | null>;

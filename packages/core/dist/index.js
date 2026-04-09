@@ -54,18 +54,18 @@ var NotificationCenter = class {
     await this.storage.save(notification);
     try {
       if (this.queue) {
-        console.log("\u{1F4E6} Notification queued");
+        console.log("Notification queued");
         if (notification.scheduledFor) {
-          console.log("\u{1F4E6} Notification scheduled for: " + notification.scheduledFor.toLocaleDateString());
+          console.log("Notification scheduled for: " + notification.scheduledFor.toLocaleDateString());
           const delay = notification.scheduledFor.getTime() - Date.now();
-          console.log("\u{1F4E6} Notification delay: " + delay + "ms");
+          console.log("Notification delay: " + delay + "ms");
           await this.queue.enqueueDelayed(notification, delay);
         } else {
-          console.log("\u{1F4E6} Notification sent directly after enqueue");
+          console.log("Notification sent directly after enqueue");
           await this.queue.enqueue(notification);
         }
       } else {
-        console.log("\u{1F4E6} Notification sent directly in sendNow");
+        console.log("Notification sent directly in sendNow");
         await this.sendNow(notification);
       }
       return notification;
@@ -353,6 +353,9 @@ var NotificationCenter = class {
       return;
     }
     this.isRunning = true;
+    if (this.storage.initialize) {
+      await this.storage.initialize();
+    }
     if (this.queue) {
       await this.queue.start();
       if (this.config.workers?.enabled !== false) {
