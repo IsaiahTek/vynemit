@@ -1,5 +1,5 @@
 import nodemailer from 'nodemailer';
-import { DeliveryReceipt, TransportAdapter, ChannelType, NotificationPreferences, EmailNotification } from '@notifyc/core';
+import { DeliveryReceipt, TransportAdapter, ChannelType, NotificationPreferences, EmailNotification } from '@vynelix/vynemit-core';
 
 export class SmtpProvider implements TransportAdapter {
   private transporter;
