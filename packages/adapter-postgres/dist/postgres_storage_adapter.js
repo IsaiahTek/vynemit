@@ -1,7 +1,7 @@
 "use strict";
 // ============================================================================
-// @notifyc/adapter-postgres
-// PostgreSQL Storage Adapter for NotifyC
+// @vynelix/vynemit-adapter-postgres
+// PostgreSQL Storage Adapter for Vynemit
 // ============================================================================
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PostgresStorageAdapter = void 0;
@@ -378,9 +378,9 @@ exports.PostgresStorageAdapter = PostgresStorageAdapter;
 // ============================================================================
 /*
 {
-  "name": "@notifyc/adapter-postgres",
+  "name": "@vynelix/vynemit-adapter-postgres",
   "version": "1.0.0",
-  "description": "PostgreSQL storage adapter for NotifyC",
+  "description": "PostgreSQL storage adapter for Vynemit",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -388,7 +388,7 @@ exports.PostgresStorageAdapter = PostgresStorageAdapter;
     "test": "jest"
   },
   "peerDependencies": {
-    "@notifyc/core": "^1.0.0"
+    "@vynelix/vynemit-core": "^1.0.0"
   },
   "dependencies": {
     "pg": "^8.11.0"
@@ -403,8 +403,8 @@ exports.PostgresStorageAdapter = PostgresStorageAdapter;
 // USAGE EXAMPLE
 // ============================================================================
 /*
-import { NotificationCenter } from '@notifyc/core';
-import { PostgresStorageAdapter } from '@notifyc/adapter-postgres';
+import { NotificationCenter } from '@vynelix/vynemit-core';
+import { PostgresStorageAdapter } from '@vynelix/vynemit-adapter-postgres';
 
 const storage = new PostgresStorageAdapter({
   connectionString: process.env.DATABASE_URL,

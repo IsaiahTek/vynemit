@@ -1,5 +1,5 @@
 import { Pool, PoolConfig } from 'pg';
-import { StorageAdapter, Notification, NotificationFilters, NotificationPreferences, DeliveryReceipt } from '@notifyc/core';
+import { StorageAdapter, Notification, NotificationFilters, NotificationPreferences, DeliveryReceipt } from '@vynelix/vynemit-core';
 export interface PostgresStorageConfig {
     pool?: Pool;
     connectionString?: string;

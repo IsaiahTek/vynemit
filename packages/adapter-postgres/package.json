@@ -1,5 +1,5 @@
 {
-  "name": "@notifyc/adapter-postgres",
+  "name": "@vynelix/vynemit-adapter-postgres",
   "version": "1.0.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -12,17 +12,17 @@
     "pg": "^8.11.0"
   },
   "peerDependencies": {
-    "@notifyc/core": "*"
+    "@vynelix/vynemit-core": "*"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/IsaiahTek/notifyc.git",
+    "url": "git+https://github.com/IsaiahTek/vynemit.git",
     "directory": "packages/adapter-postgres"
   },
   "bugs": {
-    "url": "https://github.com/IsaiahTek/notifyc/issues"
+    "url": "https://github.com/IsaiahTek/vynemit/issues"
   },
-  "homepage": "https://github.com/IsaiahTek/notifyc#readme",
+  "homepage": "https://github.com/IsaiahTek/vynemit#readme",
   "devDependencies": {
     "@types/jest": "^29.5.0",
     "@types/pg": "^8.11.0",

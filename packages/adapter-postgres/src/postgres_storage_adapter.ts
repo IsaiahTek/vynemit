@@ -1,6 +1,6 @@
 // ============================================================================
-// @notifyc/adapter-postgres
-// PostgreSQL Storage Adapter for NotifyC
+// @vynelix/vynemit-adapter-postgres
+// PostgreSQL Storage Adapter for Vynemit
 // ============================================================================
 
 import { Pool, PoolConfig, QueryResult } from 'pg';
@@ -11,7 +11,7 @@ import {
   NotificationPreferences,
   DeliveryReceipt,
   NotificationStatus
-} from '@notifyc/core';
+} from '@vynelix/vynemit-core';
 import { MIGRATIONS } from './db/migrations';
 
 // ============================================================================
@@ -460,9 +460,9 @@ export class PostgresStorageAdapter implements StorageAdapter {
 
 /*
 {
-  "name": "@notifyc/adapter-postgres",
+  "name": "@vynelix/vynemit-adapter-postgres",
   "version": "1.0.0",
-  "description": "PostgreSQL storage adapter for NotifyC",
+  "description": "PostgreSQL storage adapter for Vynemit",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -470,7 +470,7 @@ export class PostgresStorageAdapter implements StorageAdapter {
     "test": "jest"
   },
   "peerDependencies": {
-    "@notifyc/core": "^1.0.0"
+    "@vynelix/vynemit-core": "^1.0.0"
   },
   "dependencies": {
     "pg": "^8.11.0"
@@ -487,8 +487,8 @@ export class PostgresStorageAdapter implements StorageAdapter {
 // ============================================================================
 
 /*
-import { NotificationCenter } from '@notifyc/core';
-import { PostgresStorageAdapter } from '@notifyc/adapter-postgres';
+import { NotificationCenter } from '@vynelix/vynemit-core';
+import { PostgresStorageAdapter } from '@vynelix/vynemit-adapter-postgres';
 
 const storage = new PostgresStorageAdapter({
   connectionString: process.env.DATABASE_URL,
