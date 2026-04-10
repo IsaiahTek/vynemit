@@ -31,7 +31,7 @@ export function initializeNotifications({ config, onInitialized, onConnected, on
     };
     if (config.debug) {
       const method = level === 'error' ? 'error' : level === 'warn' ? 'warn' : 'log';
-      console[method]('[notifyc-react]', payload);
+      console[method]('[vynemit-react]', payload);
     }
     config.onDebugEvent?.(payload);
   };

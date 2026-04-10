@@ -1,4 +1,4 @@
-# notifyc-react - Provider-less Usage Guide
+# vynemit-react - Provider-less Usage Guide
 
 Complete guide for using Synq Notifications in React with **react-synq-store** (NO PROVIDER NEEDED!)
 
@@ -12,13 +12,13 @@ Unlike traditional React state management, `react-synq-store` doesn't require wr
 - ✅ **Notification Centers** (dropdowns, panels)
 - ✅ **Cross-App State** (shared across different parts of your app)
 
-## 📦 Installation
+## Installation
 
 ```bash
-npm install notifyc-react react-synq-store @notifyc/core
+npm install vynemit-react react-synq-store @vynelix/vynemit-core
 ```
 
-## 🎯 Quick Start (3 Steps)
+## Quick Start (3 Steps)
 
 ### Step 1: Initialize Once
 
@@ -29,7 +29,7 @@ Call `initializeNotifications()` once in your app entry point:
 // or _app.tsx (Next.js Pages Router)
 // or main.tsx (Vite/CRA)
 
-import { initializeNotifications } from 'notifyc-react';
+import { initializeNotifications } from 'vynemit-react';
 
 // Initialize on client side
 if (typeof window !== 'undefined') {
@@ -67,7 +67,7 @@ export default function RootLayout({ children }) {
 
 **In your header:**
 ```tsx
-import { useUnreadCount } from 'notifyc-react';
+import { useUnreadCount } from 'vynemit-react';
 
 function Header() {
   const unreadCount = useUnreadCount(); // ✨ Works without provider!
@@ -87,7 +87,7 @@ function Header() {
 
 **In your sidebar:**
 ```tsx
-import { useNotifications } from 'notifyc-react';
+import { useNotifications } from 'vynemit-react';
 
 function Sidebar() {
   const { notifications } = useNotifications({ status: 'unread' });
@@ -103,7 +103,7 @@ function Sidebar() {
 
 **Anywhere else:**
 ```tsx
-import { markAsRead } from 'notifyc-react';
+import { markAsRead } from 'vynemit-react';
 
 function RandomComponent() {
   return (
@@ -294,7 +294,7 @@ import {
   deleteNotification,
   deleteAll,
   updatePreferences
-} from 'notifyc-react';
+} from 'vynemit-react';
 
 // Call from anywhere - no hooks needed!
 await markAsRead('notif_123');
@@ -326,7 +326,7 @@ export default function RootLayout({ children }) {
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { useNotifications } from "notifyc-react";
+import { useNotifications } from "vynemit-react";
 
 export default function NotificationToastContainer() {
   const { notifications, markAsRead } = useNotifications({
@@ -564,7 +564,7 @@ initializeNotifications({
 });
 ```
 
-## 🎯 Advanced Patterns
+## Advanced Patterns
 
 ### Grouped Notifications
 
@@ -677,7 +677,7 @@ const { notifications, markAsRead } = useNotifications();
 ## 🧪 Testing
 
 ```tsx
-import { notificationStore, initializeNotifications } from 'notifyc-react';
+import { notificationStore, initializeNotifications } from 'vynemit-react';
 
 beforeEach(() => {
   // Reset store
@@ -705,4 +705,4 @@ No providers, no context, no boilerplate. Just initialize once and use anywhere!
 - Check out the [full demo](https://github.com/synq/notifications-demo)
 - Explore [advanced patterns](https://docs.synq.dev/patterns)
 - Join our [Discord community](https://discord.gg/synq)
-# notifyc-react
+# vynemit-react

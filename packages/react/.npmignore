@@ -1,1 +1,11 @@
 src
+node_modules
+tests
+docs
+.env
+.gitignore
+.npmignore
+.prettierrc
+.eslintrc.js
+.npmrc
+.vscode

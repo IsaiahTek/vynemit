@@ -383,7 +383,7 @@ export class NotificationApiClient {
       try {
         await callback();
       } catch (err) {
-        // console.error('[notifyc] Polling error:', err);
+        // console.error('[vynemit] Polling error:', err);
       }
     }, this.config.pollInterval);
   }

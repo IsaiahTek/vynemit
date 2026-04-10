@@ -72,7 +72,7 @@ function initializeNotifications(_a) {
         var payload = __assign({ source: source, event: event, level: level, timestamp: new Date().toISOString() }, (details ? { details: details } : {}));
         if (config.debug) {
             var method = level === 'error' ? 'error' : level === 'warn' ? 'warn' : 'log';
-            console[method]('[notifyc-react]', payload);
+            console[method]('[vynemit-react]', payload);
         }
         (_a = config.onDebugEvent) === null || _a === void 0 ? void 0 : _a.call(config, payload);
     };
