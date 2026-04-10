@@ -11,7 +11,7 @@ type RequestLike = {
 };
 
 import { NotificationsService } from "../services/notification.service";
-import { NotificationFilters, NotificationInput, NotificationPreferences } from '@notifyc/core/';
+import { NotificationFilters, NotificationInput, NotificationPreferences } from '@vynelix/vynemit-core/';
 
 @Controller('notifications')
 export class NotificationsController {

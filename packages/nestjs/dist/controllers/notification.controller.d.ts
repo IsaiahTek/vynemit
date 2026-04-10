@@ -5,23 +5,23 @@ type RequestLike = {
     removeListener(event: 'close', listener: () => void): void;
 };
 import { NotificationsService } from "../services/notification.service";
-import { NotificationInput, NotificationPreferences } from '@notifyc/core/';
+import { NotificationInput, NotificationPreferences } from '@vynelix/vynemit-core/';
 export declare class NotificationsController {
     private readonly notificationsService;
     constructor(notificationsService: NotificationsService);
     health(): Promise<Record<string, boolean>>;
     streamNotifications(userId: string, req: RequestLike): Observable<MessageEvent>;
-    getNotifications(userId: string, status?: string, type?: string, category?: string, limit?: string, offset?: string): Promise<import("@notifyc/core/").Notification[]>;
+    getNotifications(userId: string, status?: string, type?: string, category?: string, limit?: string, offset?: string): Promise<import("@vynelix/vynemit-core/").Notification[]>;
     getUnreadCount(userId: string): Promise<{
         count: number;
     }>;
-    getStats(userId: string): Promise<import("@notifyc/core/").NotificationStats>;
+    getStats(userId: string): Promise<import("@vynelix/vynemit-core/").NotificationStats>;
     getPreferences(userId: string): Promise<NotificationPreferences>;
     updatePreferences(userId: string, preferences: Partial<NotificationPreferences>): Promise<{
         success: boolean;
     }>;
-    sendNotification(input: NotificationInput): Promise<import("@notifyc/core/").Notification>;
-    sendBatch(inputs: NotificationInput[]): Promise<import("@notifyc/core/").Notification[]>;
+    sendNotification(input: NotificationInput): Promise<import("@vynelix/vynemit-core/").Notification>;
+    sendBatch(inputs: NotificationInput[]): Promise<import("@vynelix/vynemit-core/").Notification[]>;
     markAsRead(userId: string, id: string): Promise<{
         success: boolean;
     }>;

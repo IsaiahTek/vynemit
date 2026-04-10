@@ -2,7 +2,7 @@
 // TYPES & CONSTANTS
 // ============================================================================
 
-import { NotificationConfig, NotificationTemplate } from "@notifyc/core";
+import { NotificationConfig, NotificationTemplate } from "@vynelix/vynemit-core";
 
 export const NOTIFICATION_OPTIONS = 'NOTIFICATION_OPTIONS';
 export const NOTIFICATION_CENTER = 'NOTIFICATION_CENTER';

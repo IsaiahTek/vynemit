@@ -1,4 +1,4 @@
-export * from '@notifyc/core';
+export * from '@vynelix/vynemit-core';
 
 export * from './controllers/notification.controller';
 export * from './gateways/notifications-websocket.gateway';

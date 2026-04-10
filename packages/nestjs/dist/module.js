@@ -15,7 +15,7 @@ const common_1 = require("@nestjs/common");
 const notification_controller_1 = require("./controllers/notification.controller");
 const notification_service_1 = require("./services/notification.service");
 const notifications_websocket_gateway_1 = require("./gateways/notifications-websocket.gateway");
-const core_1 = require("@notifyc/core");
+const vynemit_core_1 = require("@vynelix/vynemit-core");
 let globalNotificationCenterInstance = null;
 let globalNotificationsServiceInstance = null;
 let initializationPromise = null;
@@ -30,7 +30,7 @@ async function createNotificationCenterAndSetGlobal(options) {
     }
     console.log('NotificationCenter: Creating new instance...');
     initializationPromise = (async () => {
-        const center = new core_1.NotificationCenter({
+        const center = new vynemit_core_1.NotificationCenter({
             storage: options.storage,
             transports: options.transports,
             queue: options.queue,

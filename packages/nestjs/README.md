@@ -7,7 +7,7 @@ Complete guide for integrating Synq Notifications with **NestJS** and **Express.
 ### NestJS
 
 ```bash
-npm install @notifyc/nestjs @notifyc/core
+npm install @vynelix/vynemit-nestjs @vynelix/vynemit-core
 # Optional: only needed if you enable the built-in WebSocket gateway
 npm install @nestjs/websockets @nestjs/platform-socket.io socket.io
 ```
@@ -15,7 +15,7 @@ npm install @nestjs/websockets @nestjs/platform-socket.io socket.io
 ### Express.js
 
 ```bash
-npm install @notifyc/express @notifyc/core
+npm install @vynelix/vynemit-express @vynelix/vynemit-core
 npm install ws
 ```
 
@@ -26,11 +26,11 @@ npm install ws
 ```typescript
 // app.module.ts
 import { Module } from "@nestjs/common";
-import { NotificationsModule } from "@notifyc/nestjs";
-import { PostgresStorageAdapter } from "@notifyc/adapter-postgres";
-import { FirebasePushAdapter } from "@notifyc/adapter-fcm";
-import { SendGridEmailAdapter } from "@notifyc/adapter-sendgrid";
-import { RedisQueueAdapter } from "@notifyc/queue-redis";
+import { NotificationsModule } from "@vynelix/vynemit-nestjs";
+import { PostgresStorageAdapter } from "@vynelix/vynemit-adapter-postgres";
+import { FirebasePushAdapter } from "@vynelix/vynemit-adapter-fcm";
+import { SendGridEmailAdapter } from "@vynelix/vynemit-adapter-sendgrid";
+import { RedisQueueAdapter } from "@vynelix/vynemit-queue-redis";
 
 @Module({
   imports: [
@@ -151,7 +151,7 @@ export class AppModule {}
 
 ```typescript
 import { Injectable } from "@nestjs/common";
-import { NotificationsService } from "@notifyc/nestjs";
+import { NotificationsService } from "@vynelix/vynemit-nestjs";
 
 @Injectable()
 export class UserService {
@@ -180,7 +180,7 @@ export class UserService {
 
 ```typescript
 import { Controller, Post, Param, Request } from "@nestjs/common";
-import { NotificationsService } from "@notifyc/nestjs";
+import { NotificationsService } from "@vynelix/vynemit-nestjs";
 
 @Controller("posts")
 export class PostsController {
@@ -239,7 +239,7 @@ You can also inject the `NotificationCenter` directly:
 
 ```typescript
 import { Injectable, Inject } from '@nestjs/common';
-import { NOTIFICATION_CENTER, NotificationCenter } from '@notifyc/nestjs';
+import { NOTIFICATION_CENTER, NotificationCenter } from '@vynelix/vynemit-nestjs';
 
 @Injectable()
 export class CustomService {
@@ -337,10 +337,10 @@ socket.emit("delete", { notificationId: "notif_123" });
 ```typescript
 import express from "express";
 import http from "http";
-import { createNotificationsMiddleware } from "@notifyc/express";
-import { PostgresStorageAdapter } from "@notifyc/adapter-postgres";
-import { SendGridEmailAdapter } from "@notifyc/adapter-sendgrid";
-import { RedisQueueAdapter } from "@notifyc/queue-redis";
+import { createNotificationsMiddleware } from "@vynelix/vynemit-express";
+import { PostgresStorageAdapter } from "@vynelix/vynemit-adapter-postgres";
+import { SendGridEmailAdapter } from "@vynelix/vynemit-adapter-sendgrid";
+import { RedisQueueAdapter } from "@vynelix/vynemit-queue-redis";
 
 const app = express();
 const server = http.createServer(app);
@@ -444,7 +444,7 @@ app.post("/auth/signup", async (req, res) => {
 If you want more control:
 
 ```typescript
-import { NotificationCenter } from '@notifyc/core';
+import { NotificationCenter } from '@vynelix/vynemit-core';
 
 const notificationCenter = new NotificationCenter({
   storage: new PostgresStorageAdapter(...),
@@ -634,7 +634,7 @@ import { Test } from "@nestjs/testing";
 import {
   NotificationsModule,
   NotificationsService,
-} from "@notifyc/nestjs";
+} from "@vynelix/vynemit-nestjs";
 
 describe("UserService", () => {
   let userService: UserService;
@@ -707,4 +707,4 @@ You now have complete backend integrations for:
 
 Choose the one that fits your stack and start sending notifications! 🚀
 
-# notifyc-nestjs
+# vynemit-nestjs

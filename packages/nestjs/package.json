@@ -1,7 +1,7 @@
 {
-  "name": "@notifyc/nestjs",
+  "name": "@vynelix/vynemit-nestjs",
   "version": "1.0.0",
-  "description": "Official NotifyC NestJs Wrapper that makes it super easy to send and manage notifications from within your NestJs backend",
+  "description": "Official Vynemit NestJs Wrapper that makes it super easy to send and manage notifications from within your NestJs backend",
   "main": "dist/index.js",
   "scripts": {
     "test": "jest",
@@ -12,12 +12,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/IsaiahTek/notifyc.git",
+    "url": "git+https://github.com/IsaiahTek/vynemit.git",
     "directory": "packages/nestjs"
   },
   "keywords": [
     "notify",
-    "notifyc",
+    "vynemit",
     "notification",
     "real-time",
     "update",
@@ -30,9 +30,9 @@
   "author": "Engr., Isaiah Pius E.",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/IsaiahTek/notifyc/issues"
+    "url": "https://github.com/IsaiahTek/vynemit/issues"
   },
-  "homepage": "https://github.com/IsaiahTek/notifyc#readme",
+  "homepage": "https://github.com/IsaiahTek/vynemit#readme",
   "peerDependencies": {
     "@nestjs/common": "^10.0.0 || ^11.0.0",
     "@nestjs/websockets": "^10.0.0 || ^11.0.0",
@@ -53,6 +53,6 @@
     "typescript": "^5.5.0"
   },
   "dependencies": {
-    "@notifyc/core": "*"
+    "@vynelix/vynemit-core": "*"
   }
 }
