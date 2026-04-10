@@ -1,4 +1,4 @@
-# @notifyc/core
+# @vynelix/vynemit-core
 
 > A framework-agnostic notification system with unified dispatch, storage, and transport layers.
 
@@ -17,7 +17,7 @@
 ## Installation
 
 ```bash
-npm install @notifyc/core
+npm install @vynelix/vynemit-core
 ```
 
 ## Quick Start
@@ -27,7 +27,7 @@ import {
   NotificationCenter,
   MemoryStorageAdapter,
   ConsoleTransportAdapter
-} from '@notifyc/core';
+} from '@vynelix/vynemit-core';
 
 // Initialize
 const center = new NotificationCenter({
@@ -295,11 +295,11 @@ Use framework-specific bindings for seamless integration:
 ### React
 
 ```bash
-npm install @notifyc/react
+npm install @vynelix/vynemit-react
 ```
 
 ```tsx
-import { NotificationProvider, useNotifications } from '@notifyc/react';
+import { NotificationProvider, useNotifications } from '@vynelix/vynemit-react';
 
 function App() {
   return (
@@ -323,11 +323,11 @@ function NotificationBell() {
 ### NestJS
 
 ```bash
-npm install @notifyc/nestjs
+npm install @vynelix/vynemit-nestjs
 ```
 
 ```typescript
-import { NotificationsModule } from '@notifyc/nestjs';
+import { NotificationsModule } from '@vynelix/vynemit-nestjs';
 
 @Module({
   imports: [

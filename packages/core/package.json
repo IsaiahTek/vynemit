@@ -1,5 +1,5 @@
 {
-  "name": "@notifyc/core",
+  "name": "@vynelix/vynemit-core",
   "version": "1.0.0",
   "description": "Framework-agnostic notification system with unified dispatch, storage, and transport layers",
   "main": "dist/index.js",
@@ -42,13 +42,13 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/IsaiahTek/notifyc.git",
+    "url": "git+https://github.com/IsaiahTek/vynemit.git",
     "directory": "packages/core"
   },
   "bugs": {
-    "url": "https://github.com/IsaiahTek/notifyc/issues"
+    "url": "https://github.com/IsaiahTek/vynemit/issues"
   },
-  "homepage": "https://github.com/IsaiahTek/notifyc#readme",
+  "homepage": "https://github.com/IsaiahTek/vynemit#readme",
   "devDependencies": {
     "@types/jest": "^29.5.0",
     "@types/node": "^24.9.2",

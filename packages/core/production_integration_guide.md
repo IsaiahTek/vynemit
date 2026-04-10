@@ -6,17 +6,17 @@ This guide shows you how to set up a complete production notification system usi
 
 ```bash
 # Core
-npm install @notifyc/core
+npm install @vynelix/vynemit-core
 
 # Storage
-npm install @notifyc/adapter-postgres pg
+npm install @vynelix/vynemit-adapter-postgres pg
 
 # Transports
-npm install @notifyc/adapter-fcm firebase-admin
-npm install @notifyc/adapter-sendgrid @sendgrid/mail
+npm install @vynelix/vynemit-adapter-fcm firebase-admin
+npm install @vynelix/vynemit-adapter-sendgrid @sendgrid/mail
 
 # Queue
-npm install @notifyc/queue-redis bullmq ioredis
+npm install @vynelix/vynemit-queue-redis bullmq ioredis
 ```
 
 ## 🔧 Environment Setup
@@ -78,7 +78,7 @@ Create a migration file:
 
 ```typescript
 // migrations/001_create_notifications_tables.ts
-import { PostgresStorageAdapter } from '@notifyc/adapter-postgres';
+import { PostgresStorageAdapter } from '@vynelix/vynemit-adapter-postgres';
 
 export async function up() {
   const storage = new PostgresStorageAdapter({
@@ -211,7 +211,7 @@ export class UserEmailService {
 
 ```typescript
 // src/notifications/middleware/rate-limit.ts
-import { NotificationMiddleware, Notification } from '@notifyc/core';
+import { NotificationMiddleware, Notification } from '@vynelix/vynemit-core';
 import Redis from 'ioredis';
 
 export class RateLimitMiddleware implements NotificationMiddleware {
@@ -259,7 +259,7 @@ export class RateLimitMiddleware implements NotificationMiddleware {
 }
 
 // src/notifications/middleware/deduplication.ts
-import { NotificationMiddleware, Notification } from '@notifyc/core';
+import { NotificationMiddleware, Notification } from '@vynelix/vynemit-core';
 import Redis from 'ioredis';
 import crypto from 'crypto';
 
@@ -298,7 +298,7 @@ export class DeduplicationMiddleware implements NotificationMiddleware {
 }
 
 // src/notifications/middleware/analytics.ts
-import { NotificationMiddleware, Notification } from '@notifyc/core';
+import { NotificationMiddleware, Notification } from '@vynelix/vynemit-core';
 
 export class AnalyticsMiddleware implements NotificationMiddleware {
   name = 'analytics';
@@ -343,7 +343,7 @@ export class AnalyticsMiddleware implements NotificationMiddleware {
 
 ```typescript
 // src/notifications/templates/index.ts
-import { NotificationCenter } from '@notifyc/core';
+import { NotificationCenter } from '@vynelix/vynemit-core';
 
 export function registerTemplates(center: NotificationCenter) {
   // Welcome template
@@ -419,11 +419,11 @@ export function registerTemplates(center: NotificationCenter) {
 
 ```typescript
 // src/notifications/index.ts
-import { NotificationCenter } from '@notifyc/core';
-import { PostgresStorageAdapter } from '@notifyc/adapter-postgres';
-import { FirebasePushAdapter } from '@notifyc/adapter-fcm';
-import { SendGridEmailAdapter } from '@notifyc/adapter-sendgrid';
-import { RedisQueueAdapter } from '@notifyc/queue-redis';
+import { NotificationCenter } from '@vynelix/vynemit-core';
+import { PostgresStorageAdapter } from '@vynelix/vynemit-adapter-postgres';
+import { FirebasePushAdapter } from '@vynelix/vynemit-adapter-fcm';
+import { SendGridEmailAdapter } from '@vynelix/vynemit-adapter-sendgrid';
+import { RedisQueueAdapter } from '@vynelix/vynemit-queue-redis';
 import Redis from 'ioredis';
 import { DeviceTokenService } from './services/device-tokens';
 import { UserEmailService } from './services/user-emails';
