@@ -9,12 +9,23 @@ class NotificationBadge extends StatelessWidget {
   final TextStyle? textStyle;
   final bool hideIfEmpty;
 
+  /// The visual size of the icon/child (not its touch target).
+  /// Setting this constrains the badge overlay to the icon's visual bounds.
+  /// Example: If wrapping an [IconButton] with a 24px icon, set [iconSize] to 24.
+  final double? iconSize;
+
+  /// Fine-tune the badge position offset from the top-right corner.
+  /// Defaults to [Offset(6, -6)] which slightly overhangs the corner.
+  final Offset badgeOffset;
+
   const NotificationBadge({
     Key? key,
     required this.child,
     this.badgeColor,
     this.textStyle,
     this.hideIfEmpty = true,
+    this.iconSize,
+    this.badgeOffset = const Offset(-5, 5),
   }) : super(key: key);
 
   @override
@@ -24,34 +35,63 @@ class NotificationBadge extends StatelessWidget {
         final count = provider.unreadCount;
         if (hideIfEmpty && count <= 0) return child;
 
+        final badge = Transform.translate(
+          offset: badgeOffset,
+          child: Container(
+            padding: const EdgeInsets.all(2),
+            decoration: BoxDecoration(
+              color: badgeColor ?? Colors.red,
+              shape: BoxShape.circle,
+            ),
+            constraints: const BoxConstraints(
+              minWidth: 16,
+              minHeight: 16,
+            ),
+            child: Text(
+              count > 99 ? '99+' : count.toString(),
+              style: textStyle ??
+                  const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        );
+
+        // If iconSize is provided, constrain the Stack to the visual icon size
+        // so the badge anchors to the icon corner, not the larger touch target.
+        if (iconSize != null) {
+          return Stack(
+            alignment: Alignment.center,
+            clipBehavior: Clip.none,
+            children: [
+              child,
+              Positioned(
+                width: iconSize,
+                height: iconSize,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Positioned(right: 0, top: 0, child: badge),
+                  ],
+                ),
+              ),
+            ],
+          );
+        }
+
+        // Fallback: no iconSize, anchor at top-right of the child's own bounds
         return Stack(
           clipBehavior: Clip.none,
+          alignment: Alignment.center,
           children: [
             child,
             Positioned(
-              right: -4,
-              top: -4,
-              child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: badgeColor ?? Colors.red,
-                  shape: BoxShape.circle,
-                ),
-                constraints: const BoxConstraints(
-                  minWidth: 16,
-                  minHeight: 16,
-                ),
-                child: Text(
-                  count > 99 ? '99+' : count.toString(),
-                  style: textStyle ??
-                      const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
+              right: 0,
+              top: 0,
+              child: badge,
             ),
           ],
         );

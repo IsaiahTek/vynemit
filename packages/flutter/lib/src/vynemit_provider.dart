@@ -82,21 +82,25 @@ class VynemitProvider extends ChangeNotifier {
     }
 
     if (type == 'notification') {
-      final notifJson = data['notification'] ?? data;
-      final notification = Notification.fromJson(notifJson);
-      
-      // Fully reassign the list so listeners like `Selector` relying on object equality will rebuild.
-      _notifications = [notification, ..._notifications];
-      
-      if (notification.status != NotificationStatus.read) {
-        _unreadCount++;
-      }
+      try {
+        final notifJson = data['notification'] ?? data['data'] ?? data;
+        final notification = Notification.fromJson(notifJson);
+        
+        // Fully reassign the list so listeners like `Selector` relying on object equality will rebuild.
+        _notifications = [notification, ..._notifications];
+        
+        if (notification.status != NotificationStatus.read) {
+          _unreadCount++;
+        }
 
-      // Fire the onNotification callback so the app can show a Snackbar or sound alert!
-      config.onNotification?.call(notification);
-      
-      // Update UI state
-      notifyListeners();
+        // Fire the onNotification callback so the app can show a Snackbar or sound alert!
+        config.onNotification?.call(notification);
+        
+        // Update UI state
+        notifyListeners();
+      } catch (e, stacktrace) {
+        if (config.debug) debugPrint("VynemitProvider: Error parsing SSE incoming notification: $e\nData: $data\nStackTrace: $stacktrace");
+      }
     } else if (type == 'unread-count') {
       _unreadCount = data['count'] ?? data['data'] ?? 0;
       notifyListeners();
@@ -158,8 +162,9 @@ class VynemitProvider extends ChangeNotifier {
       await _apiClient.markAsRead(notificationId);
       final index = _notifications.indexWhere((n) => n.id == notificationId);
       if (index != -1) {
-        // Optimistic update
         final n = _notifications[index];
+        // Only update if it wasn't already read — avoids double-counting
+        final wasUnread = n.status != NotificationStatus.read;
         _notifications[index] = Notification(
           id: n.id,
           type: n.type,
@@ -178,7 +183,13 @@ class VynemitProvider extends ChangeNotifier {
           channels: n.channels,
           actions: n.actions,
         );
-        _unreadCount = (_unreadCount - 1).clamp(0, double.infinity).toInt();
+        // Only decrement locally if no SSE unread-count event will follow.
+        // Since the server broadcasts an unread-count SSE event after each read,
+        // we skip the local decrement to prevent double-subtraction.
+        // If SSE is NOT connected, fall back to local decrement.
+        if (!_isConnected && wasUnread) {
+          _unreadCount = (_unreadCount - 1).clamp(0, double.infinity).toInt();
+        }
         notifyListeners();
       }
     } catch (e) {
