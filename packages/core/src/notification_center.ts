@@ -3,19 +3,38 @@ import { NotificationConfig, NotificationInput, NotificationFilters, Notificatio
 // NOTIFICATION CENTER IMPLEMENTATION
 // ============================================================================
 
+/**
+ * The core NotificationCenter class responsible for dispatching, routing, storing,
+ * and managing the lifecycle of notifications across multiple transports.
+ */
 export class NotificationCenter {
+  /** The configuration object for the NotificationCenter. */
   private config: NotificationConfig;
+  /** The storage adapter used for persisting notifications and preferences. */
   private storage: StorageAdapter;
+  /** A map of available transport adapters, indexed by channel type. */
   private transports: Map<ChannelType, TransportAdapter>;
+  /** The queue adapter used for asynchronous delivery and scheduling (optional). */
   private queue?: QueueAdapter;
+  /** A map of registered notification templates. */
   private templates: Map<string, NotificationTemplate>;
+  /** A list of middleware functions applied to notifications during their lifecycle. */
   private middleware: NotificationMiddleware[];
+  /** Subscribers listening for raw incoming notifications by user ID. */
   private subscribers: Map<string, Set<(notification: Notification) => void>>;
+  /** Subscribers listening for notification lifecycle events (e.g., read, sent) by user ID. */
   private eventSubscribers: Map<string, Set<(event: NotificationEvent) => void>>;
+  /** Subscribers listening to unread count changes by user ID. */
   private unreadSubscribers: Map<string, Set<(count: number, userId: string) => void>>;
+  /** Indicates whether the NotificationCenter background processes are currently running. */
   private isRunning: boolean;
+  /** The interval handle for the queue worker. */
   private workerInterval?: NodeJS.Timeout;
 
+  /**
+   * Initializes a new NotificationCenter with the provided configuration.
+   * @param config - The configuration options including adapters and transports.
+   */
   constructor(config: NotificationConfig) {
     this.config = config;
     this.storage = config.storage;
@@ -38,6 +57,13 @@ export class NotificationCenter {
 
   // ========== DISPATCH ==========
 
+  /**
+   * Dispatches a single notification based on the provided input.
+   * If a queue is configured, the delivery takes place asynchronously.
+   * 
+   * @param input - The notification payload and routing instructions.
+   * @returns A promise that resolves to the processed Notification object.
+   */
   async send(input: NotificationInput): Promise<Notification> {
     // Build notification from input
     let notification: Notification | null = this.buildNotification(input);
@@ -77,6 +103,12 @@ export class NotificationCenter {
     }
   }
 
+  /**
+   * Dispatches an array of notifications sequentially or concurrently.
+   * 
+   * @param inputs - An array of notification inputs.
+   * @returns A promise resolving to an array of generated Notification objects.
+   */
   async sendBatch(inputs: NotificationInput[]): Promise<Notification[]> {
     const notifications = await Promise.all(
       inputs.map(input => this.send(input))
@@ -84,6 +116,13 @@ export class NotificationCenter {
     return notifications;
   }
 
+  /**
+   * Sends an identical notification to a list of users (multicast).
+   * Automatically optimizes push/sms transport delivery if transport supports bulk send.
+   * 
+   * @param input - Multicast payload including the target `userIds`.
+   * @returns A promise resolving to the dispatched notifications.
+   */
   async sendMulticast(input: NotificationMulticastInput): Promise<Notification[]> {
     // 1. Build and process notifications
     const notifications = await Promise.all(input.userIds.map(async (userId) => {
@@ -125,8 +164,21 @@ export class NotificationCenter {
             await Promise.all(receipts.map(r => this.storage.saveReceipt!(r)));
           }
         } else {
-          // Fallback to individual sends
-          await Promise.all(validNotifications.map(n => this.sendNow(n)));
+          // Fallback to individual sends ONLY for this transport, so we don't trigger sendNow() infinitely or double-fire
+          await Promise.all(validNotifications.map(async (n) => {
+             const prefs = await this.storage.getPreferences(n.userId);
+             if (transport.canSend(n, prefs)) {
+                try {
+                  const receipt = await transport.send(n, prefs);
+                  if (this.storage.saveReceipt) await this.storage.saveReceipt(receipt);
+                } catch (error) {
+                  const receipt: DeliveryReceipt = {
+                     notificationId: n.id, channel, status: 'failed', attempts: 1, lastAttempt: new Date(), error: (error as Error).message
+                  };
+                  if (this.storage.saveReceipt) await this.storage.saveReceipt(receipt);
+                }
+             }
+          }));
         }
       } catch (error) {
         // Fallback for this channel if multicast fails or other error
@@ -135,9 +187,34 @@ export class NotificationCenter {
       }
     }
 
+    // 4. Update status, apply middleware, and trigger local subscribers for each notification (crucial for SSE/WebSockets)
+    await Promise.all(validNotifications.map(async (notification) => {
+      notification.status = 'sent';
+      await this.applyAfterSendMiddleware(notification);
+
+      if (notification.channels.includes('inapp') || channels.includes('inapp')) {
+        this.notifySubscribers(notification);
+      }
+      this.notifyEventSubscribers({
+        type: 'sent',
+        notification,
+        timestamp: new Date()
+      });
+
+      await this.storage.save(notification);
+    }));
+
     return validNotifications;
   }
 
+  /**
+   * Schedules a notification to be sent at a specific future date/time.
+   * Automatically enqueues it if the queue adapter supports delayed jobs.
+   * 
+   * @param input - The notification input.
+   * @param when - The Date at which the notification should be delivered.
+   * @returns A promise resolving to the generated Notification ID.
+   */
   async schedule(input: NotificationInput, when: Date): Promise<string> {
     // Build notification with scheduled time
     let notification = this.buildNotification({ ...input, scheduledFor: when });
@@ -163,18 +240,43 @@ export class NotificationCenter {
 
   // ========== QUERYING ==========
 
+  /**
+   * Retrieves notifications intended for a specific user ID.
+   * 
+   * @param userId - The target user's ID.
+   * @param filters - Optional filters like status, type, limit, offset.
+   * @returns A promise resolving to the list of matched notifications.
+   */
   async getForUser(userId: string, filters?: NotificationFilters): Promise<Notification[]> {
     return this.storage.findByUser(userId, filters);
   }
 
+  /**
+   * Retrieves the current number of unread notifications for a specified user.
+   * 
+   * @param userId - The target user's ID.
+   * @returns The count of unread notifications.
+   */
   async getUnreadCount(userId: string): Promise<number> {
     return this.storage.countUnread(userId);
   }
 
+  /**
+   * Retrieves a specific notification by its unique ID.
+   * 
+   * @param id - The Notification ID.
+   * @returns The notification object if found, otherwise null.
+   */
   async getById(id: string): Promise<Notification | null> {
     return this.storage.findById(id);
   }
 
+  /**
+   * Aggregates notification statistics for a specified user (e.g., total, unread, counts by channel).
+   * 
+   * @param userId - The user's ID to fetch stats for.
+   * @returns An object containing grouped statistics.
+   */
   async getStats(userId: string): Promise<NotificationStats> {
     const all = await this.storage.findByUser(userId, {});
     const unread = await this.storage.countUnread(userId);
@@ -201,6 +303,11 @@ export class NotificationCenter {
 
   // ========== STATE MANAGEMENT ==========
 
+  /**
+   * Marks a specific notification as "read" and triggers real-time updates for listeners.
+   * 
+   * @param notificationId - The unique ID of the notification.
+   */
   async markAsRead(notificationId: string): Promise<void> {
     await this.storage.markAsRead(notificationId);
 
@@ -219,6 +326,11 @@ export class NotificationCenter {
     }
   }
 
+  /**
+   * Marks all notifications belonging to a user as "read".
+   * 
+   * @param userId - The user's ID.
+   */
   async markAllAsRead(userId: string): Promise<void> {
     await this.storage.markAllAsRead(userId);
 
@@ -226,6 +338,11 @@ export class NotificationCenter {
     this.notifyUnreadSubscribers(userId, 0);
   }
 
+  /**
+   * Reverts a notification status back to "unread".
+   * 
+   * @param notificationId - The unique ID of the notification.
+   */
   async markAsUnread(notificationId: string): Promise<void> {
     await this.storage.markAsUnread(notificationId);
 
@@ -244,6 +361,11 @@ export class NotificationCenter {
     }
   }
 
+  /**
+   * Marks all notifications belonging to a user as "unread".
+   * 
+   * @param userId - The target user's ID.
+   */
   async markAllAsUnread(userId: string): Promise<void> {
     await this.storage.markAllAsUnread(userId);
 
@@ -251,6 +373,11 @@ export class NotificationCenter {
     this.notifyUnreadSubscribers(userId, 0);
   }
 
+  /**
+   * Deletes a specific notification from storage.
+   * 
+   * @param notificationId - The Notification ID to delete.
+   */
   async delete(notificationId: string): Promise<void> {
     const notification = await this.storage.findById(notificationId);
     await this.storage.delete(notificationId);
@@ -262,6 +389,11 @@ export class NotificationCenter {
     }
   }
 
+  /**
+   * Deletes all notifications for a specific user.
+   * 
+   * @param userId - The user's ID.
+   */
   async deleteAll(userId: string): Promise<void> {
     const notifications = await this.storage.findByUser(userId, {});
     await Promise.all(
@@ -273,10 +405,22 @@ export class NotificationCenter {
 
   // ========== PREFERENCES ==========
 
+  /**
+   * Retrieves the notification opt-in/opt-out routing preferences for a given user.
+   * 
+   * @param userId - The user's ID.
+   * @returns A promise resolving to the user's NotificationPreferences.
+   */
   async getPreferences(userId: string): Promise<NotificationPreferences> {
     return this.storage.getPreferences(userId);
   }
 
+  /**
+   * Updates the notification routing and delivery preferences for an user.
+   * 
+   * @param userId - The user's ID.
+   * @param prefs - A partial object containing the updated preferences.
+   */
   async updatePreferences(
     userId: string,
     prefs: Partial<NotificationPreferences>
@@ -293,20 +437,42 @@ export class NotificationCenter {
 
   // ========== TEMPLATES ==========
 
+  /**
+   * Registers a notification template, mapping a named key to dynamic defaults/formatting.
+   * 
+   * @param template - The NotificationTemplate definitions.
+   */
   registerTemplate(template: NotificationTemplate): void {
     this.templates.set(template.id, template);
   }
 
+  /**
+   * Looks up a registered template by its ID.
+   * 
+   * @param id - The ID of the template.
+   * @returns The template object, or undefined if not found.
+   */
   getTemplate(id: string): NotificationTemplate | undefined {
     return this.templates.get(id);
   }
 
+  /**
+   * Unregisters a template from the NotificationCenter.
+   * 
+   * @param id - The template ID to remove.
+   */
   unregisterTemplate(id: string): void {
     this.templates.delete(id);
   }
 
   // ========== DIGEST ==========
 
+  /**
+   * Enables batch notification "digests" for a specific user to prevent notification fatigue.
+   * 
+   * @param userId - The user's ID.
+   * @param config - The timeframe and configuration for the user's digest.
+   */
   async enableDigest(userId: string, config: DigestConfig): Promise<void> {
     // Store digest config in preferences metadata
     const prefs = await this.getPreferences(userId);
@@ -319,6 +485,11 @@ export class NotificationCenter {
     } as any);
   }
 
+  /**
+   * Disables the digest feature for a user, reverting to immediate delivery.
+   * 
+   * @param userId - The target user's ID.
+   */
   async disableDigest(userId: string): Promise<void> {
     const prefs = await this.getPreferences(userId);
     const newData = { ...(prefs.data || {}) };
@@ -330,6 +501,12 @@ export class NotificationCenter {
     });
   }
 
+  /**
+   * Fetches the current digest rules configured for a user.
+   * 
+   * @param userId - The user's ID.
+   * @returns The digest configuration, or null if disabled.
+   */
   async getDigestConfig(userId: string): Promise<DigestConfig | null> {
     const prefs = await this.getPreferences(userId);
     return (prefs.data?.digestConfig as DigestConfig) || null;
@@ -337,6 +514,13 @@ export class NotificationCenter {
 
   // ========== DELIVERY STATUS ==========
 
+  /**
+   * Retrieves all delivery receipts generated from transports for a specific notification.
+   * Useful to see which channels succeeded and which failed.
+   * 
+   * @param notificationId - The notification's ID.
+   * @returns An array of delivery receipts.
+   */
   async getDeliveryStatus(notificationId: string): Promise<DeliveryReceipt[]> {
     if (!this.storage.getReceipts) {
       return [];
@@ -344,6 +528,12 @@ export class NotificationCenter {
     return this.storage.getReceipts(notificationId);
   }
 
+  /**
+   * Attempts to resend a notification for any channels that previously marked it as "failed".
+   * 
+   * @param notificationId - The target notification ID.
+   * @param channel - Optional channel scope. If provided, retries only on this specific transport.
+   */
   async retryFailed(notificationId: string, channel?: ChannelType): Promise<void> {
     const notification = await this.storage.findById(notificationId);
     if (!notification) {
@@ -366,6 +556,13 @@ export class NotificationCenter {
 
   // ========== SUBSCRIPTIONS (Reactive) ==========
 
+  /**
+   * Registers a callback to be invoked whenever a notification is sent to a specific user.
+   * 
+   * @param userId - The target user's ID.
+   * @param callback - Function to handle the raw notification map.
+   * @returns A cleanup function to unsubscribe from this event.
+   */
   subscribe(
     userId: string,
     callback: (notification: Notification) => void
@@ -387,6 +584,13 @@ export class NotificationCenter {
     };
   }
 
+  /**
+   * Registers a callback for state changes (e.g. read/unread status updates) for a user's notifications.
+   * 
+   * @param userId - The target user's ID.
+   * @param callback - Lifecycle event listener.
+   * @returns A cleanup function to unsubscribe.
+   */
   subscribeToEvents(
     userId: string,
     callback: (event: NotificationEvent) => void
@@ -408,6 +612,13 @@ export class NotificationCenter {
     };
   }
 
+  /**
+   * Registers a listener to react to changes in the unread notification count for a user.
+   * 
+   * @param userId - The user's ID.
+   * @param callback - Handlers receiving the current unread count.
+   * @returns Unsubscribe function.
+   */
   onUnreadCountChange(
     userId: string,
     callback: (count: number, userId: string) => void
@@ -432,16 +643,29 @@ export class NotificationCenter {
 
   // ========== MIDDLEWARE ==========
 
+  /**
+   * Injects a middleware interceptor to apply custom logic before or after notifications are sent.
+   * 
+   * @param middleware - The middleware object conforming to `NotificationMiddleware`.
+   */
   use(middleware: NotificationMiddleware): void {
     this.middleware.push(middleware);
   }
 
+  /**
+   * Removes a previously configured middleware globally.
+   * 
+   * @param name - The name identifier of the middleware to remove.
+   */
   removeMiddleware(name: string): void {
     this.middleware = this.middleware.filter(m => m.name !== name);
   }
 
   // ========== LIFECYCLE ==========
 
+  /**
+   * Boots up the NotificationCenter, initializing storage, queues, and worker loops if enabled.
+   */
   async start(): Promise<void> {
     if (this.isRunning) {
       return;
@@ -470,6 +694,9 @@ export class NotificationCenter {
     }
   }
 
+  /**
+   * Gracefully shuts down the NotificationCenter, terminating background queues and workers.
+   */
   async stop(): Promise<void> {
     if (!this.isRunning) {
       return;
@@ -489,6 +716,11 @@ export class NotificationCenter {
     }
   }
 
+  /**
+   * Pings all registered transports to report on their current health and active status.
+   * 
+   * @returns A map representing the readiness boolean state of each registered transport.
+   */
   async healthCheck(): Promise<Record<string, boolean>> {
     const results: Record<string, boolean> = {};
 
@@ -509,6 +741,9 @@ export class NotificationCenter {
 
   // ========== PRIVATE METHODS ==========
 
+  /** 
+   * Applies metadata, templates, and defaults to construct the internal Notification shape.
+   */
   private buildNotification(input: NotificationInput): Notification {
     const allChannels = Array.from(this.transports.keys());
 
@@ -586,6 +821,9 @@ export class NotificationCenter {
     };
   }
 
+  /**
+   * Internal mechanism sending payload out across desired transports without queue delay.
+   */
   private async sendNow(notification: Notification): Promise<void> {
     const prefs = await this.getPreferences(notification.userId);
 
