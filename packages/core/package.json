@@ -1,6 +1,6 @@
 {
   "name": "@vynelix/vynemit-core",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Framework-agnostic notification system with unified dispatch, storage, and transport layers",
   "main": "dist/index.js",
   "module": "dist/index.mjs",

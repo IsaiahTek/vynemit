@@ -4,14 +4,14 @@
 
 ## Features
 
-✨ **Unified Notification Model** - Single interface for in-app, push, email, SMS, and webhooks  
+**Unified Notification Model** - Single interface for in-app, push, email, SMS, and webhooks  
 **Event-Based Dispatch** - Reactive system with real-time subscriptions  
-📊 **Read/Unread Tracking** - Built-in state management  
-🎛️ **Channel Filters** - User preferences for notification channels  
-⚡ **Queue Support** - Redis, BullMQ, or in-memory queues  
-🔌 **Pluggable Architecture** - Swap storage and transport adapters  
-🎨 **Template System** - Reusable notification templates  
-🔄 **Middleware Support** - Rate limiting, deduplication, analytics  
+**Read/Unread Tracking** - Built-in state management  
+**Channel Filters** - User preferences for notification channels  
+**Queue Support** - Redis, BullMQ, or in-memory queues  
+**Pluggable Architecture** - Swap storage and transport adapters  
+**Template System** - Reusable notification templates  
+**Middleware Support** - Rate limiting, deduplication, analytics  
 **Zero Dependencies** - Lightweight core with optional adapters  
 
 ## Installation
@@ -394,7 +394,7 @@ Contributions welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) first.
 
 ## Support
 
-- 📧 Email: support@synq.dev
-- 💬 Discord: [Join our community](https://discord.gg/synq)
-- 📖 Docs: [docs.synq.dev](https://docs.synq.dev)
-- 🐛 Issues: [GitHub Issues](https://github.com/yourusername/synq-notifications/issues)
+- Email: [EMAIL ADDRESS](mailto:admin@vynelix.com)
+- Discord: [Join our community](https://discord.gg/synq)
+- Docs: [docs](https://vynelix.com/docs)
+- Issues: [GitHub Issues](https://github.com/IsaiahTek/vynemit/issues)
