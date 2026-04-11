@@ -273,4 +273,38 @@ class NotificationConfig {
     this.onRefreshAuth,
     this.dataLocator,
   });
+
+  NotificationConfig copyWith({
+    String? apiUrl,
+    String? userId,
+    RealtimeTransport? realtimeTransport,
+    String? sseUrl,
+    String? ssePath,
+    String? sseAuthQueryParam,
+    int? sseConnectTimeoutMs,
+    String? wsUrl,
+    Duration? pollInterval,
+    bool? debug,
+    Function(Map<String, dynamic>)? onDebugEvent,
+    Future<String?> Function()? getAuthToken,
+    Future<void> Function()? onRefreshAuth,
+    dynamic Function(dynamic)? dataLocator,
+  }) {
+    return NotificationConfig(
+      apiUrl: apiUrl ?? this.apiUrl,
+      userId: userId ?? this.userId,
+      realtimeTransport: realtimeTransport ?? this.realtimeTransport,
+      sseUrl: sseUrl ?? this.sseUrl,
+      ssePath: ssePath ?? this.ssePath,
+      sseAuthQueryParam: sseAuthQueryParam ?? this.sseAuthQueryParam,
+      sseConnectTimeoutMs: sseConnectTimeoutMs ?? this.sseConnectTimeoutMs,
+      wsUrl: wsUrl ?? this.wsUrl,
+      pollInterval: pollInterval ?? this.pollInterval,
+      debug: debug ?? this.debug,
+      onDebugEvent: onDebugEvent ?? this.onDebugEvent,
+      getAuthToken: getAuthToken ?? this.getAuthToken,
+      onRefreshAuth: onRefreshAuth ?? this.onRefreshAuth,
+      dataLocator: dataLocator ?? this.dataLocator,
+    );
+  }
 }

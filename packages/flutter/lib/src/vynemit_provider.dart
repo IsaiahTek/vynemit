@@ -4,9 +4,9 @@ import 'models/models.dart';
 import 'realtime_service.dart';
 
 class VynemitProvider extends ChangeNotifier {
-  final NotificationConfig config;
-  late final NotificationApiClient _apiClient;
-  late final RealtimeService _realtimeService;
+  NotificationConfig config;
+  late NotificationApiClient _apiClient;
+  late RealtimeService _realtimeService;
 
   List<Notification> _notifications = [];
   int _unreadCount = 0;
@@ -237,6 +237,20 @@ class VynemitProvider extends ChangeNotifier {
   /// [data] should be the raw map payload from the message.
   void handleSerializedNotification(Map<String, dynamic> data) {
     _onMessage(data, isSSE: false);
+  }
+
+  /// Updates the SDK configuration and re-initializes all services.
+  /// This will disconnect the current realtime connection and fetch notifications for the new configuration.
+  void updateConfig(NotificationConfig newConfig) {
+    _realtimeService.disconnect();
+    _apiClient.dispose();
+    config = newConfig;
+    _apiClient = NotificationApiClient(config);
+    _realtimeService = RealtimeService(
+      config: config,
+      onMessage: _onMessage,
+    );
+    _initialize();
   }
 
   @override
