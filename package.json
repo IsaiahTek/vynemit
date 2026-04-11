@@ -1,5 +1,5 @@
 {
-  "name": "notifyc-monorepo",
+  "name": "vynemit-monorepo",
   "private": true,
   "workspaces": [
     "packages/*"
@@ -14,10 +14,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/IsaiahTek/notifyc.git"
+    "url": "https://github.com/IsaiahTek/vynemit.git"
   },
   "bugs": {
-    "url": "https://github.com/IsaiahTek/notifyc/issues"
+    "url": "https://github.com/IsaiahTek/vynemit/issues"
   },
-  "homepage": "https://github.com/IsaiahTek/notifyc#readme"
+  "homepage": "https://github.com/IsaiahTek/vynemit#readme"
 }

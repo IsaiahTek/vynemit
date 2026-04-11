@@ -3,7 +3,7 @@ import 'api_client.dart';
 import 'models/models.dart';
 import 'realtime_service.dart';
 
-class NotifycProvider extends ChangeNotifier {
+class VynemitProvider extends ChangeNotifier {
   final NotificationConfig config;
   late final NotificationApiClient _apiClient;
   late final RealtimeService _realtimeService;
@@ -26,7 +26,7 @@ class NotifycProvider extends ChangeNotifier {
   bool get isConnected => _isConnected;
   DateTime? get lastSync => _lastSync;
 
-  NotifycProvider(this.config) {
+  VynemitProvider(this.config) {
     _apiClient = NotificationApiClient(config);
     _realtimeService = RealtimeService(
       config: config,

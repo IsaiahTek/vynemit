@@ -1,8 +1,8 @@
-name: notifyc_flutter
-description: A powerful, lightweight Flutter client for the notifyc notification system.
+name: vynemit_flutter
+description: A powerful, lightweight Flutter client for the Vynemit notification system.
 version: 0.1.0
-repository: https://github.com/IsaiahTek/notifyc
-homepage: https://github.com/IsaiahTek/notifyc
+repository: https://github.com/IsaiahTek/vynemit
+homepage: https://github.com/IsaiahTek/vynemit
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -12,7 +12,7 @@ dependencies:
   flutter:
     sdk: flutter
   http: ^1.1.0
-  socket_io_client: ^2.0.3
+  socket_io_client: ^3.1.4
   intl: ^0.18.1
   provider: ^6.1.1 # For ChangeNotifier integration
 

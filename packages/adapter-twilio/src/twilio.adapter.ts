@@ -5,7 +5,7 @@ import {
     ChannelType,
     NotificationPreferences,
     SmsNotification
-} from '@notifyc/core';
+} from '@vynelix/vynemit-core';
 
 export interface TwilioConfig {
     accountSid: string;

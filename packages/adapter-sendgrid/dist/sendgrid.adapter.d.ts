@@ -1,4 +1,4 @@
-import { DeliveryReceipt, TransportAdapter, ChannelType, NotificationPreferences, EmailNotification } from '@notifyc/core';
+import { DeliveryReceipt, TransportAdapter, ChannelType, NotificationPreferences, EmailNotification } from '@vynelix/vynemit-core';
 export declare class SendGridProvider implements TransportAdapter {
     name: ChannelType;
     private apiKey;

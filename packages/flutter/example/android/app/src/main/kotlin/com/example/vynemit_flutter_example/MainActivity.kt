@@ -1,4 +1,4 @@
-package com.example.notifyc_flutter_example
+package com.example.vynemit_flutter_example
 
 import io.flutter.embedding.android.FlutterActivity
 

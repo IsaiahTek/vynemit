@@ -1,10 +1,10 @@
 {
   "roots": [
-    "notifyc_flutter"
+    "vynemit_flutter"
   ],
   "packages": [
     {
-      "name": "notifyc_flutter",
+      "name": "vynemit_flutter",
       "version": "0.1.0",
       "dependencies": [
         "flutter",

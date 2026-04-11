@@ -1,4 +1,4 @@
-import { DeliveryReceipt, TransportAdapter, ChannelType, NotificationPreferences, SmsNotification } from '@notifyc/core';
+import { DeliveryReceipt, TransportAdapter, ChannelType, NotificationPreferences, SmsNotification } from '@vynelix/vynemit-core';
 export interface TwilioConfig {
     accountSid: string;
     authToken: string;

@@ -1,4 +1,4 @@
-# notifyc_flutter_example
+# vynemit_flutter_example
 
 A new Flutter project.
 

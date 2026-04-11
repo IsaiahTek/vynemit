@@ -1,4 +1,4 @@
-name: notifyc_flutter_example
+name: vynemit_flutter_example
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -30,7 +30,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  notifyc_flutter:
+  vynemit_flutter:
     path: ../
   provider: ^6.1.1
 

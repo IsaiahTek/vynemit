@@ -1,5 +1,5 @@
 import sgMail from '@sendgrid/mail';
-import { DeliveryReceipt, TransportAdapter, ChannelType, NotificationPreferences, EmailNotification } from '@notifyc/core';
+import { DeliveryReceipt, TransportAdapter, ChannelType, NotificationPreferences, EmailNotification } from '@vynelix/vynemit-core';
 
 export class SendGridProvider implements TransportAdapter {
   name: ChannelType = 'email';

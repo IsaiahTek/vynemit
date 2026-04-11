@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/models.dart' as models;
-import '../notifyc_provider.dart';
+import '../vynemit_provider.dart';
 
 class NotificationBadge extends StatelessWidget {
   final Widget child;
@@ -19,7 +19,7 @@ class NotificationBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<NotifycProvider>(
+    return Consumer<VynemitProvider>(
       builder: (context, provider, _) {
         final count = provider.unreadCount;
         if (hideIfEmpty && count <= 0) return child;
@@ -74,7 +74,7 @@ class NotificationList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<NotifycProvider>(
+    return Consumer<VynemitProvider>(
       builder: (context, provider, _) {
         if (provider.loading && provider.notifications.isEmpty) {
           return const Center(child: CircularProgressIndicator());
@@ -119,7 +119,7 @@ class NotificationItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isUnread = notification.status != models.NotificationStatus.read;
-    final provider = context.read<NotifycProvider>();
+    final provider = context.read<VynemitProvider>();
 
     return ListTile(
       onTap: () {

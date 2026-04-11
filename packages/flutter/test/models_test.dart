@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:notifyc_flutter/notifyc_flutter.dart';
+import 'package:vynemit_flutter/vynemit_flutter.dart';
 
 void main() {
   group('Notification Model', () {

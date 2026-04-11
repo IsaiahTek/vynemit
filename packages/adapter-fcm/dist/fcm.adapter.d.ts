@@ -1,5 +1,5 @@
 import * as admin from 'firebase-admin';
-import { DeliveryReceipt, TransportAdapter, ChannelType, NotificationPreferences, PushNotification } from '@notifyc/core';
+import { DeliveryReceipt, TransportAdapter, ChannelType, NotificationPreferences, PushNotification } from '@vynelix/vynemit-core';
 export declare class FcmProvider implements TransportAdapter {
     private app?;
     name: ChannelType;
