@@ -3,8 +3,9 @@ import 'package:http/http.dart' as http;
 import 'models/models.dart';
 
 class NotificationApiClient {
-  final NotificationConfig config;
+  NotificationConfig config;
   final http.Client _client;
+  Future<void>? _refreshFuture;
 
   NotificationApiClient(this.config, {http.Client? client}) : _client = client ?? http.Client();
 
@@ -28,13 +29,13 @@ class NotificationApiClient {
 
     switch (method.toUpperCase()) {
       case 'POST':
-        response = await _client.post(url, headers: requestHeaders, body: jsonEncode(body));
+        response = await _client.post(url, headers: requestHeaders, body: body != null ? jsonEncode(body) : null);
         break;
       case 'PATCH':
-        response = await _client.patch(url, headers: requestHeaders, body: jsonEncode(body));
+        response = await _client.patch(url, headers: requestHeaders, body: body != null ? jsonEncode(body) : null);
         break;
       case 'PUT':
-        response = await _client.put(url, headers: requestHeaders, body: jsonEncode(body));
+        response = await _client.put(url, headers: requestHeaders, body: body != null ? jsonEncode(body) : null);
         break;
       case 'DELETE':
         response = await _client.delete(url, headers: requestHeaders);
@@ -45,7 +46,8 @@ class NotificationApiClient {
 
     // Handle 401 retry
     if (response.statusCode == 401 && !isRetry && config.onRefreshAuth != null) {
-      await config.onRefreshAuth!();
+      _refreshFuture ??= config.onRefreshAuth!().whenComplete(() => _refreshFuture = null);
+      await _refreshFuture;
       return _request<T>(endpoint, method: method, headers: headers, body: body, isRetry: true);
     }
 

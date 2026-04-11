@@ -256,6 +256,7 @@ class NotificationConfig {
   final Future<String?> Function()? getAuthToken;
   final Future<void> Function()? onRefreshAuth;
   final dynamic Function(dynamic)? dataLocator;
+  final Function(Notification)? onNotification;
 
   NotificationConfig({
     required this.apiUrl,
@@ -272,6 +273,7 @@ class NotificationConfig {
     this.getAuthToken,
     this.onRefreshAuth,
     this.dataLocator,
+    this.onNotification,
   });
 
   NotificationConfig copyWith({
@@ -289,6 +291,7 @@ class NotificationConfig {
     Future<String?> Function()? getAuthToken,
     Future<void> Function()? onRefreshAuth,
     dynamic Function(dynamic)? dataLocator,
+    Function(Notification)? onNotification,
   }) {
     return NotificationConfig(
       apiUrl: apiUrl ?? this.apiUrl,
@@ -305,6 +308,7 @@ class NotificationConfig {
       getAuthToken: getAuthToken ?? this.getAuthToken,
       onRefreshAuth: onRefreshAuth ?? this.onRefreshAuth,
       dataLocator: dataLocator ?? this.dataLocator,
+      onNotification: onNotification ?? this.onNotification,
     );
   }
 }

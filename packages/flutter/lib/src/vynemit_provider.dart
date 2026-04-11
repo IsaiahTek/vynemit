@@ -3,6 +3,10 @@ import 'api_client.dart';
 import 'models/models.dart';
 import 'realtime_service.dart';
 
+/// A ChangeNotifier that manages the Vynemit Notification SDK state and coordinates
+/// both REST API calls and real-time connectivity (WebSocket/SSE) for a specific user.
+/// It provides reactive state updates to the UI, handling notification fetches, unread counts,
+/// and optimistic local updates.
 class VynemitProvider extends ChangeNotifier {
   NotificationConfig config;
   late NotificationApiClient _apiClient;
@@ -17,13 +21,21 @@ class VynemitProvider extends ChangeNotifier {
   bool _isConnected = false;
   DateTime? _lastSync;
 
+  /// The current state of notifications.
   List<Notification> get notifications => _notifications;
+  /// The current number of unread notifications for the user.
   int get unreadCount => _unreadCount;
+  /// Additional notification statistics (e.g., breakdown by channel).
   NotificationStats? get stats => _stats;
+  /// The user's active notification preferences and opt-ins.
   NotificationPreferences? get preferences => _preferences;
+  /// Whether the provider is currently initializing or performing a major sync.
   bool get loading => _loading;
+  /// Holds the last error encountered during an operation (if any).
   String? get error => _error;
+  /// Whether the real-time transport (WebSocket/SSE) is currently connected and active.
   bool get isConnected => _isConnected;
+  /// The specific time an active sync with the server last happened.
   DateTime? get lastSync => _lastSync;
 
   VynemitProvider(this.config) {
@@ -37,7 +49,11 @@ class VynemitProvider extends ChangeNotifier {
 
   Future<void> _initialize() async {
     _setLoading(true);
+    _error = null;
     try {
+      if (config.debug) {
+        debugPrint("VynemitProvider: initializing for user ${config.userId}...");
+      }
       await Future.wait([
         fetchNotifications(),
         fetchUnreadCount(),
@@ -48,28 +64,47 @@ class VynemitProvider extends ChangeNotifier {
       _lastSync = DateTime.now();
     } catch (e) {
       _error = e.toString();
+      if (config.debug) {
+        debugPrint("VynemitProvider: initialization failed: $e");
+      }
     } finally {
       _setLoading(false);
       notifyListeners();
     }
   }
 
-  void _onMessage(Map<String, dynamic> data, {bool isSSE = false}) {
-    final type = data['type'];
+
+  void _onMessage(Map<String, dynamic> data, {bool isSSE = false, String? eventType}) {
+    final type = eventType ?? data['type'];
+    
+    if (config.debug) {
+      debugPrint("VynemitProvider: message received (type: $type, isSSE: $isSSE)");
+    }
+
     if (type == 'notification') {
-      final notifJson = isSSE ? data['data'] : data['notification'];
+      final notifJson = data['notification'] ?? data;
       final notification = Notification.fromJson(notifJson);
-      _notifications.insert(0, notification);
+      
+      // Fully reassign the list so listeners like `Selector` relying on object equality will rebuild.
+      _notifications = [notification, ..._notifications];
+      
       if (notification.status != NotificationStatus.read) {
         _unreadCount++;
       }
+
+      // Fire the onNotification callback so the app can show a Snackbar or sound alert!
+      config.onNotification?.call(notification);
+      
+      // Update UI state
       notifyListeners();
     } else if (type == 'unread-count') {
-      _unreadCount = isSSE ? data['data'] : data['count'];
+      _unreadCount = data['count'] ?? data['data'] ?? 0;
       notifyListeners();
     } else if (type == 'initial-data') {
-      final initialData = isSSE ? data['data'] : data;
-      _notifications = (initialData['notifications'] as List)
+      // For initial-data, both WS and SSE will have notifications and unreadCount in the root of data
+      final initialData = data['data'] != null && data['data'] is Map ? data['data'] : data;
+      
+      _notifications = (initialData['notifications'] as List? ?? [])
           .map((e) => Notification.fromJson(e))
           .toList();
       _unreadCount = initialData['unreadCount'] ?? 0;
@@ -104,6 +139,7 @@ class VynemitProvider extends ChangeNotifier {
     }
   }
 
+  /// Fetches the user's notification preferences from the server.
   Future<void> fetchPreferences() async {
     try {
       _preferences = await _apiClient.getPreferences();
@@ -114,6 +150,9 @@ class VynemitProvider extends ChangeNotifier {
     }
   }
 
+  /// Optimistically marks a specific notification as "read" locally, then updates the server.
+  /// 
+  /// [notificationId] The ID of the notification to mark read.
   Future<void> markAsRead(String notificationId) async {
     try {
       await _apiClient.markAsRead(notificationId);
@@ -148,27 +187,30 @@ class VynemitProvider extends ChangeNotifier {
     }
   }
 
+  /// Optimistically marks all notifications as read locally, then syncs the action to the server.
   Future<void> markAllAsRead() async {
     try {
       await _apiClient.markAllAsRead();
-      _notifications = _notifications.map((n) => Notification(
-          id: n.id,
-          type: n.type,
-          title: n.title,
-          body: n.body,
-          data: n.data,
-          userId: n.userId,
-          groupId: n.groupId,
-          priority: n.priority,
-          category: n.category,
-          status: NotificationStatus.read,
-          readAt: DateTime.now(),
-          createdAt: n.createdAt,
-          scheduledFor: n.scheduledFor,
-          expiresAt: n.expiresAt,
-          channels: n.channels,
-          actions: n.actions,
-        )).toList();
+      _notifications = _notifications
+          .map((n) => Notification(
+                id: n.id,
+                type: n.type,
+                title: n.title,
+                body: n.body,
+                data: n.data,
+                userId: n.userId,
+                groupId: n.groupId,
+                priority: n.priority,
+                category: n.category,
+                status: NotificationStatus.read,
+                readAt: DateTime.now(),
+                createdAt: n.createdAt,
+                scheduledFor: n.scheduledFor,
+                expiresAt: n.expiresAt,
+                channels: n.channels,
+                actions: n.actions,
+              ))
+          .toList();
       _unreadCount = 0;
       notifyListeners();
     } catch (e) {
@@ -204,6 +246,47 @@ class VynemitProvider extends ChangeNotifier {
     }
   }
 
+  /// Updates the configuration logic of the Provider, causing it to dispose of old connections
+  /// and thoroughly re-initialize with the new configuration (e.g. when changing Users/Tenants).
+  /// 
+  /// [userId] Dynamically change the associated User without providing a whole new Config object.
+  /// [newConfig] Override the current configuration completely.
+  Future<void> updateConfig(
+      {String? userId, NotificationConfig? newConfig}) async {
+    if (config.debug) {
+      debugPrint("VynemitProvider: updating config (userId: $userId, hasNewConfig: ${newConfig != null})");
+      config.onDebugEvent?.call({
+        'type': 'update-config',
+        'userId': userId,
+        'hasNewConfig': newConfig != null,
+      });
+    }
+
+    final oldConfig = config;
+    if (newConfig != null) {
+      config = newConfig;
+    } else if (userId != null) {
+      config = config.copyWith(userId: userId);
+    }
+
+    // Make sure our existing API and Realtime clients use the newest config/token getters.
+    _apiClient.config = config;
+    _realtimeService.config = config;
+
+    // Only drop connections and re-initialize if fundamental user params changed.
+    final userChanged = oldConfig.userId != config.userId || oldConfig.apiUrl != config.apiUrl;
+
+    if (userChanged) {
+      if (config.debug) debugPrint("VynemitProvider: Connection dropping due to config user change");
+      await _initialize();
+    } else {
+      if (config.debug) debugPrint("VynemitProvider: Config updated, preserving active connections.");
+      if (!_isConnected) {
+         _realtimeService.connect();
+      }
+    }
+  }
+
   /// Registers an FCM/Push token by storing it in the user's notification preferences.
   /// This allows the backend FirebasePushAdapter to retrieve the tokens for delivery.
   Future<void> registerPushToken(String token) async {
@@ -215,7 +298,8 @@ class VynemitProvider extends ChangeNotifier {
 
       // 2. Safely extract existing device tokens
       final existingData = Map<String, dynamic>.from(_preferences?.data ?? {});
-      final List<String> tokens = List<String>.from(existingData['deviceTokens'] ?? []);
+      final List<String> tokens =
+          List<String>.from(existingData['deviceTokens'] ?? []);
 
       // 3. Add token if it's new
       if (!tokens.contains(token)) {
@@ -237,20 +321,6 @@ class VynemitProvider extends ChangeNotifier {
   /// [data] should be the raw map payload from the message.
   void handleSerializedNotification(Map<String, dynamic> data) {
     _onMessage(data, isSSE: false);
-  }
-
-  /// Updates the SDK configuration and re-initializes all services.
-  /// This will disconnect the current realtime connection and fetch notifications for the new configuration.
-  void updateConfig(NotificationConfig newConfig) {
-    _realtimeService.disconnect();
-    _apiClient.dispose();
-    config = newConfig;
-    _apiClient = NotificationApiClient(config);
-    _realtimeService = RealtimeService(
-      config: config,
-      onMessage: _onMessage,
-    );
-    _initialize();
   }
 
   @override

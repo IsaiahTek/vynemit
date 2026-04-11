@@ -5,13 +5,14 @@ import 'package:socket_io_client/socket_io_client.dart' as io;
 import 'models/models.dart';
 
 class RealtimeService {
-  final NotificationConfig config;
-  final Function(Map<String, dynamic>, {bool isSSE}) onMessage;
+  NotificationConfig config;
+  final Function(Map<String, dynamic>, {bool isSSE, String? eventType}) onMessage;
 
   io.Socket? _ws;
   StreamSubscription? _sseSubscription;
   http.Client? _sseClient;
   Timer? _pollingTimer;
+  Future<void>? _refreshFuture;
 
   Completer<bool>? _wsCompleter;
   Completer<bool>? _sseCompleter;
@@ -21,23 +22,23 @@ class RealtimeService {
     required this.onMessage,
   });
 
-  Future<bool> connect() async {
+  Future<bool> connect({bool isRetry = false}) async {
     disconnect();
 
     if (config.realtimeTransport == RealtimeTransport.none) return false;
 
     if (config.realtimeTransport == RealtimeTransport.sse) {
-      final sseConnected = await connectSSE();
+      final sseConnected = await connectSSE(isRetry: isRetry);
       if (sseConnected) return true;
 
       if (config.wsUrl != null) {
-        return connectWebSocket();
+        return connectWebSocket(isRetry: isRetry);
       }
     } else if (config.realtimeTransport == RealtimeTransport.websocket) {
-      final wsConnected = await connectWebSocket();
+      final wsConnected = await connectWebSocket(isRetry: isRetry);
       if (wsConnected) return true;
 
-      return connectSSE();
+      return connectSSE(isRetry: isRetry);
     } else if (config.realtimeTransport == RealtimeTransport.polling) {
       startPolling();
       return true;
@@ -46,7 +47,7 @@ class RealtimeService {
     return false;
   }
 
-  Future<bool> connectWebSocket() async {
+  Future<bool> connectWebSocket({bool isRetry = false}) async {
     if (_wsCompleter != null) return _wsCompleter!.future;
 
     _ws?.dispose();
@@ -71,12 +72,61 @@ class RealtimeService {
       });
 
       _ws!.onAny((event, data) {
-        onMessage(data as Map<String, dynamic>, isSSE: false);
+        if (data is Map) {
+          onMessage(Map<String, dynamic>.from(data), isSSE: false, eventType: event.toString());
+        } else if (data != null) {
+          try {
+             // In case socket payload is serialized string
+            final map = jsonDecode(data.toString());
+            onMessage(map, isSSE: false, eventType: event.toString());
+          } catch (_) {}
+        }
       });
 
-      _ws!.onConnectError((err) {
+      _ws!.onConnectError((err) async {
+        final errStr = err.toString().toLowerCase();
+        if ((errStr.contains('401') || errStr.contains('unauthorized') || errStr.contains('authentication')) && !isRetry && config.onRefreshAuth != null) {
+          if (config.debug) {
+            config.onDebugEvent?.call({
+              'type': 'ws-401',
+              'message': 'WebSocket connection returned 401, attempting token refresh...',
+            });
+          }
+          _refreshFuture ??= config.onRefreshAuth!().whenComplete(() => _refreshFuture = null);
+          await _refreshFuture;
+          
+          // Reconnect with new token
+          _ws?.dispose();
+          _ws = null;
+          final reconnected = await connectWebSocket(isRetry: true);
+          if (!completer.isCompleted) completer.complete(reconnected);
+          return;
+        }
+
+        if (config.debug) {
+          config.onDebugEvent?.call({
+            'type': 'ws-error',
+            'message': 'WebSocket connect error: $err',
+          });
+        }
         if (!completer.isCompleted) completer.complete(false);
         _wsCompleter = null;
+      });
+      
+      _ws!.onDisconnect((reason) async {
+        if (config.debug) {
+          config.onDebugEvent?.call({
+            'type': 'ws-disconnect',
+            'message': 'WebSocket disconnected: $reason',
+          });
+        }
+        // If the server disconnected us specifically due to unauthorized, try to refresh and reconnect
+        final reasonStr = reason.toString().toLowerCase();
+        if ((reasonStr == 'io server disconnect' || reasonStr.contains('unauthorized')) && !isRetry && config.onRefreshAuth != null) {
+          _refreshFuture ??= config.onRefreshAuth!().whenComplete(() => _refreshFuture = null);
+          await _refreshFuture;
+          connectWebSocket(isRetry: true);
+        }
       });
 
     } catch (e) {
@@ -87,7 +137,7 @@ class RealtimeService {
     return completer.future;
   }
 
-  Future<bool> connectSSE() async {
+  Future<bool> connectSSE({bool isRetry = false}) async {
     if (_sseCompleter != null) return _sseCompleter!.future;
 
     _sseSubscription?.cancel();
@@ -117,14 +167,42 @@ class RealtimeService {
       final request = http.Request('GET', urlWithToken);
       request.headers['Accept'] = 'text/event-stream';
       request.headers['Cache-Control'] = 'no-cache';
+      if (token != null) {
+        request.headers['Authorization'] = 'Bearer $token';
+      }
 
       final response = await _sseClient!.send(request);
       
+      if (response.statusCode == 401 && !isRetry && config.onRefreshAuth != null) {
+        if (config.debug) {
+          config.onDebugEvent?.call({
+            'type': 'sse-401',
+            'message': 'SSE connection returned 401, attempting token refresh...',
+          });
+        }
+        
+        _refreshFuture ??= config.onRefreshAuth!().whenComplete(() => _refreshFuture = null);
+        await _refreshFuture;
+        
+        // Retry connection once
+        _sseClient?.close();
+        _sseClient = null;
+        return connectSSE(isRetry: true);
+      }
+
       if (response.statusCode != 200) {
+        if (config.debug) {
+          config.onDebugEvent?.call({
+            'type': 'sse-error',
+            'message': 'SSE connection failed with status: ${response.statusCode}',
+          });
+        }
         if (!completer.isCompleted) completer.complete(false);
         _sseCompleter = null;
         return false;
       }
+
+      String? currentSseEvent;
 
       _sseSubscription = response.stream
           .transform(utf8.decoder)
@@ -135,12 +213,21 @@ class RealtimeService {
           _sseCompleter = null;
         }
 
-        if (line.startsWith('data:')) {
+        if (line.startsWith('event:')) {
+          currentSseEvent = line.substring(6).trim();
+        } else if (line.startsWith('data:')) {
           final data = line.substring(5).trim();
           if (data.isNotEmpty) {
             try {
-              onMessage(jsonDecode(data), isSSE: true);
-            } catch (_) {}
+              final mapData = jsonDecode(data);
+              onMessage(mapData is Map ? Map<String, dynamic>.from(mapData) : {'data': mapData}, isSSE: true, eventType: currentSseEvent);
+              currentSseEvent = null;
+            } catch (_) {
+              try {
+                onMessage({'data': data}, isSSE: true, eventType: currentSseEvent);
+                currentSseEvent = null;
+              } catch (_) {}
+            }
           }
         }
       }, onError: (err) {
