@@ -14,7 +14,7 @@ import { io, Socket } from "socket.io-client";
 
 
 export class NotificationApiClient {
-  private config: NotificationConfig;
+  public config: NotificationConfig;
 
   private ws?: Socket;
   private sse?: EventSource;
@@ -23,6 +23,7 @@ export class NotificationApiClient {
   private ssePromise?: Promise<boolean>;
 
   private pollingIntervalId?: ReturnType<typeof setInterval>;
+  private refreshPromise?: Promise<void>;
 
   constructor(config: NotificationConfig) {
     this.config = config;
@@ -73,7 +74,14 @@ export class NotificationApiClient {
 
     // 🔁 Handle 401 retry
     if (response.status === 401 && !isRetry) {
-      await this.config.onRefreshAuth?.();
+      if (this.config.onRefreshAuth) {
+        if (!this.refreshPromise) {
+          this.refreshPromise = this.config.onRefreshAuth().finally(() => {
+            this.refreshPromise = undefined;
+          });
+        }
+        await this.refreshPromise;
+      }
 
       const newToken = this.config.getAuthToken
         ? await this.config.getAuthToken()
@@ -221,7 +229,7 @@ export class NotificationApiClient {
      WEBSOCKET
   ============================================================ */
 
-  async connectWebSocket(onMessage: (data: any) => void): Promise<boolean> {
+  async connectWebSocket(onMessage: (data: any) => void, isRetry = false): Promise<boolean> {
     if (this.wsPromise) return this.wsPromise;
 
     if (this.ws) {
@@ -256,29 +264,58 @@ export class NotificationApiClient {
           transports: ['websocket'], // optional but recommended
         });
 
-        console.log('WS Connecting to:', base);
+        if (this.config.debug) {
+          console.log('WS Connecting to:', base);
+        }
 
         this.ws.on('connect', () => {
-          console.log('WS Connected');
+          if (this.config.debug) console.log('WS Connected');
           settle(true);
         });
 
         this.ws.onAny((eventName, payload) => {
-          console.log('WS Event:', eventName, payload);
-          onMessage(payload);
+          // If the payload is already an object, add the eventName so it can be handled properly, else wrap it
+          let messageData = payload;
+          if (typeof payload === 'object' && payload !== null) {
+             messageData = { ...payload, type: payload.type || eventName };
+          } else {
+             messageData = { data: payload, type: eventName };
+          }
+          if (this.config.debug) console.log('WS Event:', eventName, messageData);
+          onMessage(messageData);
         });
 
-        this.ws.on('connect_error', (err) => {
-          console.error('WS Connect Error:', err);
+        this.ws.on('connect_error', async (err) => {
+          if (this.config.debug) console.error('WS Connect Error:', err);
+          
+          const errStr = String(err).toLowerCase();
+          if ((errStr.includes('401') || errStr.includes('unauthorized') || errStr.includes('authentication')) && !isRetry && this.config.onRefreshAuth) {
+             if (this.config.debug) console.log('WS 401: Refreshing token...');
+             await this.config.onRefreshAuth();
+             
+             this.ws?.close();
+             this.ws = undefined;
+             this.wsPromise = undefined;
+             const reconnected = await this.connectWebSocket(onMessage, true);
+             if (!settled) settle(reconnected);
+             return;
+          }
+          
           if (!settled) settle(false);
         });
 
-        this.ws.on('disconnect', (reason) => {
-          console.log('WS Disconnected:', reason);
+        this.ws.on('disconnect', async (reason) => {
+          if (this.config.debug) console.log('WS Disconnected:', reason);
+          const reasonStr = String(reason).toLowerCase();
+          if ((reasonStr === 'io server disconnect' || reasonStr.includes('unauthorized')) && !isRetry && this.config.onRefreshAuth) {
+             if (this.config.debug) console.log('WS Disconnected by server (unauthorized), attempting reconnect...');
+             await this.config.onRefreshAuth();
+             this.connectWebSocket(onMessage, true);
+          }
         });
 
       } catch (err) {
-        console.error('WS Error:', err);
+        if (this.config.debug) console.error('WS Error:', err);
         settle(false);
       }
     });
@@ -290,7 +327,7 @@ export class NotificationApiClient {
      SERVER-SENT EVENTS
   ============================================================ */
 
-  async connectSSE(onMessage: (data: any, isSSE: boolean) => void): Promise<boolean> {
+  async connectSSE(onMessage: (data: any, isSSE: boolean) => void, isRetry = false): Promise<boolean> {
     if (typeof EventSource === 'undefined') return false;
     if (this.ssePromise) return this.ssePromise;
 
@@ -348,18 +385,63 @@ export class NotificationApiClient {
 
       this.sse.onmessage = (event) => {
         try {
-          onMessage(JSON.parse(event.data), true);
+          const parsedData = JSON.parse(event.data);
+          // Standardize payload format to include event type if available (EventSource sets event.type to 'message' by default unless custom event name is sent)
+          const messageData = (typeof parsedData === 'object' && parsedData !== null) ? { ...parsedData, type: parsedData.type || event.type } : { data: parsedData, type: event.type };
+          onMessage(messageData, true);
         } catch {
-          onMessage(event.data, true);
+          onMessage({ data: event.data, type: event.type }, true);
         }
       };
 
-      this.sse.onerror = () => {
+      this.sse.onerror = async (err) => {
+        if (this.config.debug) console.error('SSE Error:', err);
+        // EventSource API doesn't expose HTTP status codes on errors.
+        // If it closes immediately or we haven't opened yet and we fail, we might assume auth error if auth is configured.
+        // It's safer to try a refresh if we haven't retried yet and there's a refresh handler.
+        if (!opened && !isRetry && this.config.onRefreshAuth) {
+           if (this.config.debug) console.log('SSE connection failed to open, assuming 401 and attempting refresh...');
+           
+           if (!this.refreshPromise) {
+              this.refreshPromise = this.config.onRefreshAuth().finally(() => {
+                this.refreshPromise = undefined;
+              });
+           }
+           await this.refreshPromise;
+           
+           clearTimeout(timeout);
+           this.sse?.close();
+           this.sse = undefined;
+           this.ssePromise = undefined;
+           
+           const reconnected = await this.connectSSE(onMessage, true);
+           if (!settled) settle(reconnected);
+           return;
+        }
+
         if (!opened) {
           clearTimeout(timeout);
           this.sse?.close();
           this.sse = undefined;
           settle(false);
+        } else {
+          // If the connection was previously opened but now errored (e.g. disconnected)
+          // EventSource automatically attempts to reconnect, so we close it here and manage it manually if token refresh needed
+          if (!isRetry && this.config.onRefreshAuth) {
+             if (this.config.debug) console.log('SSE Disconnected by server, attempting token refresh...');
+             this.sse?.close();
+             this.sse = undefined;
+             this.ssePromise = undefined;
+             
+             if (!this.refreshPromise) {
+                this.refreshPromise = this.config.onRefreshAuth().finally(() => {
+                  this.refreshPromise = undefined;
+                });
+             }
+             await this.refreshPromise;
+             
+             this.connectSSE(onMessage, true);
+          }
         }
       };
     });

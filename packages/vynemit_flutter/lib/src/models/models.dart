@@ -1,4 +1,3 @@
-import 'package:intl/intl.dart';
 
 enum ChannelType { inapp, push, email, sms, webhook }
 

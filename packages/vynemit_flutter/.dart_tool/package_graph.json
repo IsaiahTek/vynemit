@@ -65,11 +65,11 @@
     },
     {
       "name": "socket_io_client",
-      "version": "2.0.3+1",
+      "version": "3.1.4",
       "dependencies": [
-        "js",
         "logging",
-        "socket_io_common"
+        "socket_io_common",
+        "web"
       ]
     },
     {
@@ -186,15 +186,13 @@
       ]
     },
     {
-      "name": "js",
-      "version": "0.6.7",
-      "dependencies": [
-        "meta"
-      ]
+      "name": "web",
+      "version": "1.1.1",
+      "dependencies": []
     },
     {
       "name": "socket_io_common",
-      "version": "2.0.3",
+      "version": "3.1.1",
       "dependencies": [
         "logging"
       ]
@@ -202,11 +200,6 @@
     {
       "name": "logging",
       "version": "1.3.0",
-      "dependencies": []
-    },
-    {
-      "name": "web",
-      "version": "1.1.1",
       "dependencies": []
     },
     {

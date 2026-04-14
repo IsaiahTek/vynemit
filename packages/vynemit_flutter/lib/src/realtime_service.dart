@@ -157,10 +157,12 @@ class RealtimeService {
       final token = config.getAuthToken != null ? await config.getAuthToken!() : null;
 
       final urlWithToken = token != null
-          ? uri.replace(queryParameters: {
-              ...?uri.queryParameters,
-              config.sseAuthQueryParam ?? 'token': token,
-            })
+          ? uri.replace(
+              queryParameters: {
+                ...uri.queryParameters,
+                config.sseAuthQueryParam ?? 'token': token,
+              },
+            )
           : uri;
 
       _sseClient = http.Client();

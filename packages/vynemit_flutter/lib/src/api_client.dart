@@ -21,7 +21,7 @@ class NotificationApiClient {
     final requestHeaders = {
       'Content-Type': 'application/json',
       if (token != null) 'Authorization': 'Bearer $token',
-      ...?headers,
+      ...headers ?? const <String, String>{},
     };
 
     final url = Uri.parse('${config.apiUrl}$endpoint');

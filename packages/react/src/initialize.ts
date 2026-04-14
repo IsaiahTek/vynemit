@@ -8,8 +8,28 @@ import { notificationStore } from './store'
 // ============================================================================
 export let apiClient: NotificationApiClient | null = null;
 
+/**
+ * Initializes the Vynemit Notification SDK for a React application.
+ * This sets up the central API client, triggers the initial fetch of historical notifications/preferences,
+ * and automatically establishes a real-time connection (WebSocket or SSE) to listen for live updates.
+ *
+ * @param options Configuration options.
+ * @param options.config The Core `NotificationConfig` object specifying API URLs, User ID, and transport preferences.
+ * @param options.onInitialized Optional callback executed after the initial background network fetches complete.
+ * @param options.onConnected Optional callback executed when the real-time transport successfully connects.
+ * @param options.onNotification Optional callback executed whenever a new live notification arrives.
+ */
 export function initializeNotifications({ config, onInitialized, onConnected, onNotification }: { config: NotificationConfig, onInitialized?: () => void, onConnected?: () => void, onNotification?: (notification: Notification) => void }) {
-  apiClient = new NotificationApiClient(config);
+  let userChanged = true;
+  if (apiClient) {
+    userChanged = apiClient.config.userId !== config.userId || apiClient.config.apiUrl !== config.apiUrl;
+    apiClient.config = config; // Update config in place to keep HTTP retries alive
+  }
+
+  if (userChanged || !apiClient) {
+    if (apiClient) apiClient.disconnectRealtime();
+    apiClient = new NotificationApiClient(config);
+  }
 
   const getState = (): NotificationState => {
     const snapshot = notificationStore.snapshot as unknown as NotificationState | NotificationState[];

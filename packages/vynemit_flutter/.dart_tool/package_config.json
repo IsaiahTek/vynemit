@@ -68,12 +68,6 @@
       "languageVersion": "2.12"
     },
     {
-      "name": "js",
-      "rootUri": "file:///home/isaiah/.pub-cache/hosted/pub.dev/js-0.6.7",
-      "packageUri": "lib/",
-      "languageVersion": "2.19"
-    },
-    {
       "name": "leak_tracker",
       "rootUri": "file:///home/isaiah/.pub-cache/hosted/pub.dev/leak_tracker-11.0.2",
       "packageUri": "lib/",
@@ -147,15 +141,15 @@
     },
     {
       "name": "socket_io_client",
-      "rootUri": "file:///home/isaiah/.pub-cache/hosted/pub.dev/socket_io_client-2.0.3+1",
+      "rootUri": "file:///home/isaiah/.pub-cache/hosted/pub.dev/socket_io_client-3.1.4",
       "packageUri": "lib/",
-      "languageVersion": "2.12"
+      "languageVersion": "3.0"
     },
     {
       "name": "socket_io_common",
-      "rootUri": "file:///home/isaiah/.pub-cache/hosted/pub.dev/socket_io_common-2.0.3",
+      "rootUri": "file:///home/isaiah/.pub-cache/hosted/pub.dev/socket_io_common-3.1.1",
       "packageUri": "lib/",
-      "languageVersion": "2.12"
+      "languageVersion": "3.0"
     },
     {
       "name": "source_span",
