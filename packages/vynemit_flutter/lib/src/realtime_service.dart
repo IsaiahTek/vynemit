@@ -6,7 +6,8 @@ import 'models/models.dart';
 
 class RealtimeService {
   NotificationConfig config;
-  final Function(Map<String, dynamic>, {bool isSSE, String? eventType}) onMessage;
+  final Function(Map<String, dynamic>, {bool isSSE, String? eventType})
+      onMessage;
 
   io.Socket? _ws;
   StreamSubscription? _sseSubscription;
@@ -57,14 +58,15 @@ class RealtimeService {
     _wsCompleter = completer;
 
     try {
-      final base = (config.wsUrl ?? config.apiUrl).replaceAll(RegExp(r'/+$'), '');
-      final token = config.getAuthToken != null ? await config.getAuthToken!() : null;
+      final base =
+          (config.wsUrl ?? config.apiUrl).replaceAll(RegExp(r'/+$'), '');
+      final token =
+          config.getAuthToken != null ? await config.getAuthToken!() : null;
 
-      _ws = io.io('$base/notifications', io.OptionBuilder()
-        .setTransports(['websocket'])
-        .setAuth({'token': token})
-        .setQuery({'userId': config.userId})
-        .build());
+      _ws = io.io(
+          '$base/notifications',
+          io.OptionBuilder().setTransports(['websocket']).setAuth(
+              {'token': token}).setQuery({'userId': config.userId}).build());
 
       _ws!.onConnect((_) {
         if (!completer.isCompleted) completer.complete(true);
@@ -73,10 +75,11 @@ class RealtimeService {
 
       _ws!.onAny((event, data) {
         if (data is Map) {
-          onMessage(Map<String, dynamic>.from(data), isSSE: false, eventType: event.toString());
+          onMessage(Map<String, dynamic>.from(data),
+              isSSE: false, eventType: event.toString());
         } else if (data != null) {
           try {
-             // In case socket payload is serialized string
+            // In case socket payload is serialized string
             final map = jsonDecode(data.toString());
             onMessage(map, isSSE: false, eventType: event.toString());
           } catch (_) {}
@@ -85,16 +88,22 @@ class RealtimeService {
 
       _ws!.onConnectError((err) async {
         final errStr = err.toString().toLowerCase();
-        if ((errStr.contains('401') || errStr.contains('unauthorized') || errStr.contains('authentication')) && !isRetry && config.onRefreshAuth != null) {
+        if ((errStr.contains('401') ||
+                errStr.contains('unauthorized') ||
+                errStr.contains('authentication')) &&
+            !isRetry &&
+            config.onRefreshAuth != null) {
           if (config.debug) {
             config.onDebugEvent?.call({
               'type': 'ws-401',
-              'message': 'WebSocket connection returned 401, attempting token refresh...',
+              'message':
+                  'WebSocket connection returned 401, attempting token refresh...',
             });
           }
-          _refreshFuture ??= config.onRefreshAuth!().whenComplete(() => _refreshFuture = null);
+          _refreshFuture ??=
+              config.onRefreshAuth!().whenComplete(() => _refreshFuture = null);
           await _refreshFuture;
-          
+
           // Reconnect with new token
           _ws?.dispose();
           _ws = null;
@@ -112,7 +121,7 @@ class RealtimeService {
         if (!completer.isCompleted) completer.complete(false);
         _wsCompleter = null;
       });
-      
+
       _ws!.onDisconnect((reason) async {
         if (config.debug) {
           config.onDebugEvent?.call({
@@ -122,13 +131,16 @@ class RealtimeService {
         }
         // If the server disconnected us specifically due to unauthorized, try to refresh and reconnect
         final reasonStr = reason.toString().toLowerCase();
-        if ((reasonStr == 'io server disconnect' || reasonStr.contains('unauthorized')) && !isRetry && config.onRefreshAuth != null) {
-          _refreshFuture ??= config.onRefreshAuth!().whenComplete(() => _refreshFuture = null);
+        if ((reasonStr == 'io server disconnect' ||
+                reasonStr.contains('unauthorized')) &&
+            !isRetry &&
+            config.onRefreshAuth != null) {
+          _refreshFuture ??=
+              config.onRefreshAuth!().whenComplete(() => _refreshFuture = null);
           await _refreshFuture;
           connectWebSocket(isRetry: true);
         }
       });
-
     } catch (e) {
       if (!completer.isCompleted) completer.complete(false);
       _wsCompleter = null;
@@ -149,12 +161,14 @@ class RealtimeService {
     _sseCompleter = completer;
 
     try {
-      final base = (config.sseUrl ?? config.apiUrl).replaceAll(RegExp(r'/+$'), '');
+      final base =
+          (config.sseUrl ?? config.apiUrl).replaceAll(RegExp(r'/+$'), '');
       final path = (config.ssePath ?? '/notifications/:userId/stream')
           .replaceAll(':userId', Uri.encodeComponent(config.userId));
 
       final uri = Uri.parse('$base$path');
-      final token = config.getAuthToken != null ? await config.getAuthToken!() : null;
+      final token =
+          config.getAuthToken != null ? await config.getAuthToken!() : null;
 
       final urlWithToken = token != null
           ? uri.replace(
@@ -174,18 +188,22 @@ class RealtimeService {
       }
 
       final response = await _sseClient!.send(request);
-      
-      if (response.statusCode == 401 && !isRetry && config.onRefreshAuth != null) {
+
+      if (response.statusCode == 401 &&
+          !isRetry &&
+          config.onRefreshAuth != null) {
         if (config.debug) {
           config.onDebugEvent?.call({
             'type': 'sse-401',
-            'message': 'SSE connection returned 401, attempting token refresh...',
+            'message':
+                'SSE connection returned 401, attempting token refresh...',
           });
         }
-        
-        _refreshFuture ??= config.onRefreshAuth!().whenComplete(() => _refreshFuture = null);
+
+        _refreshFuture ??=
+            config.onRefreshAuth!().whenComplete(() => _refreshFuture = null);
         await _refreshFuture;
-        
+
         // Retry connection once
         _sseClient?.close();
         _sseClient = null;
@@ -196,7 +214,8 @@ class RealtimeService {
         if (config.debug) {
           config.onDebugEvent?.call({
             'type': 'sse-error',
-            'message': 'SSE connection failed with status: ${response.statusCode}',
+            'message':
+                'SSE connection failed with status: ${response.statusCode}',
           });
         }
         if (!completer.isCompleted) completer.complete(false);
@@ -222,11 +241,17 @@ class RealtimeService {
           if (data.isNotEmpty) {
             try {
               final mapData = jsonDecode(data);
-              onMessage(mapData is Map ? Map<String, dynamic>.from(mapData) : {'data': mapData}, isSSE: true, eventType: currentSseEvent);
+              onMessage(
+                  mapData is Map
+                      ? Map<String, dynamic>.from(mapData)
+                      : {'data': mapData},
+                  isSSE: true,
+                  eventType: currentSseEvent);
               currentSseEvent = null;
             } catch (_) {
               try {
-                onMessage({'data': data}, isSSE: true, eventType: currentSseEvent);
+                onMessage({'data': data},
+                    isSSE: true, eventType: currentSseEvent);
                 currentSseEvent = null;
               } catch (_) {}
             }
@@ -251,7 +276,6 @@ class RealtimeService {
           _sseCompleter = null;
         }
       });
-
     } catch (e) {
       if (!completer.isCompleted) completer.complete(false);
       _sseCompleter = null;

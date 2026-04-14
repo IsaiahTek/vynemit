@@ -132,7 +132,8 @@ class NotificationList extends StatelessWidget {
             itemCount: provider.notifications.length,
             itemBuilder: (context, index) {
               final notification = provider.notifications[index];
-              if (itemBuilder != null) return itemBuilder!(context, notification);
+              if (itemBuilder != null)
+                return itemBuilder!(context, notification);
               return NotificationItem(notification: notification);
             },
           ),

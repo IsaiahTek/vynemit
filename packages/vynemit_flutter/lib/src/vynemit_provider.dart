@@ -23,18 +23,25 @@ class VynemitProvider extends ChangeNotifier {
 
   /// The current state of notifications.
   List<Notification> get notifications => _notifications;
+
   /// The current number of unread notifications for the user.
   int get unreadCount => _unreadCount;
+
   /// Additional notification statistics (e.g., breakdown by channel).
   NotificationStats? get stats => _stats;
+
   /// The user's active notification preferences and opt-ins.
   NotificationPreferences? get preferences => _preferences;
+
   /// Whether the provider is currently initializing or performing a major sync.
   bool get loading => _loading;
+
   /// Holds the last error encountered during an operation (if any).
   String? get error => _error;
+
   /// Whether the real-time transport (WebSocket/SSE) is currently connected and active.
   bool get isConnected => _isConnected;
+
   /// The specific time an active sync with the server last happened.
   DateTime? get lastSync => _lastSync;
 
@@ -52,7 +59,8 @@ class VynemitProvider extends ChangeNotifier {
     _error = null;
     try {
       if (config.debug) {
-        debugPrint("VynemitProvider: initializing for user ${config.userId}...");
+        debugPrint(
+            "VynemitProvider: initializing for user ${config.userId}...");
       }
       await Future.wait([
         fetchNotifications(),
@@ -73,41 +81,45 @@ class VynemitProvider extends ChangeNotifier {
     }
   }
 
-
-  void _onMessage(Map<String, dynamic> data, {bool isSSE = false, String? eventType}) {
+  void _onMessage(Map<String, dynamic> data,
+      {bool isSSE = false, String? eventType}) {
     final type = eventType ?? data['type'];
-    
+
     if (config.debug) {
-      debugPrint("VynemitProvider: message received (type: $type, isSSE: $isSSE)");
+      debugPrint(
+          "VynemitProvider: message received (type: $type, isSSE: $isSSE)");
     }
 
     if (type == 'notification') {
       try {
         final notifJson = data['notification'] ?? data['data'] ?? data;
         final notification = Notification.fromJson(notifJson);
-        
+
         // Fully reassign the list so listeners like `Selector` relying on object equality will rebuild.
         _notifications = [notification, ..._notifications];
-        
+
         if (notification.status != NotificationStatus.read) {
           _unreadCount++;
         }
 
         // Fire the onNotification callback so the app can show a Snackbar or sound alert!
         config.onNotification?.call(notification);
-        
+
         // Update UI state
         notifyListeners();
       } catch (e, stacktrace) {
-        if (config.debug) debugPrint("VynemitProvider: Error parsing SSE incoming notification: $e\nData: $data\nStackTrace: $stacktrace");
+        if (config.debug)
+          debugPrint(
+              "VynemitProvider: Error parsing SSE incoming notification: $e\nData: $data\nStackTrace: $stacktrace");
       }
     } else if (type == 'unread-count') {
       _unreadCount = data['count'] ?? data['data'] ?? 0;
       notifyListeners();
     } else if (type == 'initial-data') {
       // For initial-data, both WS and SSE will have notifications and unreadCount in the root of data
-      final initialData = data['data'] != null && data['data'] is Map ? data['data'] : data;
-      
+      final initialData =
+          data['data'] != null && data['data'] is Map ? data['data'] : data;
+
       _notifications = (initialData['notifications'] as List? ?? [])
           .map((e) => Notification.fromJson(e))
           .toList();
@@ -155,7 +167,7 @@ class VynemitProvider extends ChangeNotifier {
   }
 
   /// Optimistically marks a specific notification as "read" locally, then updates the server.
-  /// 
+  ///
   /// [notificationId] The ID of the notification to mark read.
   Future<void> markAsRead(String notificationId) async {
     try {
@@ -259,13 +271,14 @@ class VynemitProvider extends ChangeNotifier {
 
   /// Updates the configuration logic of the Provider, causing it to dispose of old connections
   /// and thoroughly re-initialize with the new configuration (e.g. when changing Users/Tenants).
-  /// 
+  ///
   /// [userId] Dynamically change the associated User without providing a whole new Config object.
   /// [newConfig] Override the current configuration completely.
   Future<void> updateConfig(
       {String? userId, NotificationConfig? newConfig}) async {
     if (config.debug) {
-      debugPrint("VynemitProvider: updating config (userId: $userId, hasNewConfig: ${newConfig != null})");
+      debugPrint(
+          "VynemitProvider: updating config (userId: $userId, hasNewConfig: ${newConfig != null})");
       config.onDebugEvent?.call({
         'type': 'update-config',
         'userId': userId,
@@ -285,15 +298,20 @@ class VynemitProvider extends ChangeNotifier {
     _realtimeService.config = config;
 
     // Only drop connections and re-initialize if fundamental user params changed.
-    final userChanged = oldConfig.userId != config.userId || oldConfig.apiUrl != config.apiUrl;
+    final userChanged =
+        oldConfig.userId != config.userId || oldConfig.apiUrl != config.apiUrl;
 
     if (userChanged) {
-      if (config.debug) debugPrint("VynemitProvider: Connection dropping due to config user change");
+      if (config.debug)
+        debugPrint(
+            "VynemitProvider: Connection dropping due to config user change");
       await _initialize();
     } else {
-      if (config.debug) debugPrint("VynemitProvider: Config updated, preserving active connections.");
+      if (config.debug)
+        debugPrint(
+            "VynemitProvider: Config updated, preserving active connections.");
       if (!_isConnected) {
-         _realtimeService.connect();
+        _realtimeService.connect();
       }
     }
   }

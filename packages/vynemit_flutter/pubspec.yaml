@@ -1,8 +1,9 @@
 name: vynemit_flutter
 description: A powerful, lightweight Flutter client for the Vynemit notification system.
 version: 0.1.0
+homepage: https://github.com/IsaiahTek/vynemit/tree/main/packages/vynemit_flutter
 repository: https://github.com/IsaiahTek/vynemit
-homepage: https://github.com/IsaiahTek/vynemit
+issue_tracker: https://github.com/IsaiahTek/vynemit/issues
 
 topics:
   - notifications
@@ -12,7 +13,7 @@ topics:
   - messaging
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  sdk: ^3.0.0
   flutter: ">=3.10.0"
 
 dependencies:

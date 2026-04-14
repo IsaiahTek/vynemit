@@ -1,37 +1,40 @@
 # vynemit_flutter
 
-A powerful, lightweight Flutter client for the **vynemit** notification system. This package provides everything you need to integrate real-time notifications into your Flutter applications with minimal effort.
+A powerful, lightweight Flutter client for the **Vynemit** notification system. It helps you fetch notifications, keep unread state in sync, and render a notification center in Flutter with minimal wiring.
 
 ## Features
 
-- **Quick Setup**: Start receiving notifications in minutes.
-- **Real-time Synchronization**: Built-in support for SSE (Server-Sent Events) and WebSockets with automatic fallback.
-- **State Management**: Integrated `ChangeNotifier` for easy UI binding.
-- **Ready-to-use UI Components**: Customizable `NotificationBadge`, `NotificationList`, and `NotificationItem`.
-- **Authentication Support**: Seamless JWT handling with token refresh.
-- **Fully Customizable**: Override any logic or component to fit your needs.
+- **Quick setup**: Connect a user and start syncing notifications in minutes.
+- **Realtime updates**: Supports SSE and WebSockets with fallback handling.
+- **State management**: Ships with `VynemitProvider` for `ChangeNotifier`-based apps.
+- **UI helpers**: Includes `NotificationBadge`, `NotificationList`, and `NotificationItem`.
+- **Auth-aware API client**: Supports async token lookup and refresh flows.
+- **Flexible data access**: Exposes the REST client and models for custom experiences.
 
 ## Installation
 
-Add `vynemit_flutter` to your `pubspec.yaml`:
+Add the package to your app:
 
 ```yaml
 dependencies:
-  vynemit_flutter:
-    path: ../packages/flutter # Adjust the path as necessary for your monorepo
+  vynemit_flutter: ^0.1.0
   provider: ^6.1.1
+```
+
+Then install dependencies:
+
+```bash
+flutter pub get
 ```
 
 ## Quick Start
 
-### 1. Initialize the Provider
-
-Wrap your app with `ChangeNotifierProvider`:
+Wrap your app with `ChangeNotifierProvider` and create a `VynemitProvider` with your API settings:
 
 ```dart
 import 'package:flutter/material.dart';
-import 'package:vynemit_flutter/vynemit_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:vynemit_flutter/vynemit_flutter.dart';
 
 void main() {
   final config = NotificationConfig(
@@ -49,9 +52,7 @@ void main() {
 }
 ```
 
-### 2. Add the Notification Badge
-
-Use the `NotificationBadge` to show unread counts on an icon:
+Show unread counts with `NotificationBadge`:
 
 ```dart
 AppBar(
@@ -66,12 +67,12 @@ AppBar(
 )
 ```
 
-### 3. Display the Notification List
-
-Use the `NotificationList` widget to show all notifications:
+Render a notification feed with `NotificationList`:
 
 ```dart
 class NotificationCenter extends StatelessWidget {
+  const NotificationCenter({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -84,12 +85,9 @@ class NotificationCenter extends StatelessWidget {
 }
 ```
 
-### 4. FCM Integration (Push Notifications)
+## Firebase Cloud Messaging
 
-Vynemit is designed to work seamlessly with Firebase Cloud Messaging.
-
-#### Token Registration
-To receive push notifications, you must register the device token with Vynemit. The package will store this in the user's preferences:
+Register the current device token with Vynemit:
 
 ```dart
 final token = await FirebaseMessaging.instance.getToken();
@@ -98,40 +96,30 @@ if (token != null) {
 }
 ```
 
-#### Foreground Synchronization
-While the app is in the foreground, Vynemit primarily uses SSE/WebSockets for updates. However, to ensure total consistency with FCM messages, use the `handleSerializedNotification` helper:
+Keep foreground FCM payloads in sync with the in-app store:
 
 ```dart
 FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-  // If the message is from vynemit, sync it with the UI state
   if (message.data['origin'] == 'vynemit') {
     context.read<VynemitProvider>().handleSerializedNotification(message.data);
   }
 });
 ```
 
-#### Background Behavior
-Notifications received while the app is in the background are handled automatically by the OS via FCM. When the user taps the notification and opens the app, the `VynemitProvider` will automatically re-sync with the server during initialization.
-
 ## Advanced Configuration
 
-### Real-time Transport Priority
-
-Vynemit supports multiple transports. By default, it uses **SSE** and falls back to **WebSockets**:
+Prefer WebSockets when available:
 
 ```dart
 final config = NotificationConfig(
-  apiUrl: '...',
-  userId: '...',
-  // Explicitly prefer WebSockets
+  apiUrl: 'https://api.yourapp.com',
+  userId: 'user_123',
   realtimeTransport: RealtimeTransport.websocket,
   wsUrl: 'wss://api.yourapp.com',
 );
 ```
 
-### Custom UI Item
-
-You can completely override the look of individual notification items:
+Override the default row UI:
 
 ```dart
 NotificationList(
@@ -151,12 +139,21 @@ NotificationList(
 )
 ```
 
-## Package Exports
+## Exports
 
-- `NotificationConfig`: Configuration settings for the client.
-- `VynemitProvider`: The `ChangeNotifier` handling all logic and state.
-- `NotificationList`, `NotificationBadge`, `NotificationItem`: Pre-built UI components.
-- `NotificationApiClient`: Direct access to the REST API if needed.
+- `NotificationConfig` for client configuration.
+- `VynemitProvider` for reactive state and realtime orchestration.
+- `NotificationApiClient` for direct REST access.
+- `NotificationList`, `NotificationBadge`, and `NotificationItem` for UI building blocks.
+- `Notification`, `NotificationPreferences`, and related models for custom rendering.
+
+## Example
+
+A runnable example app is included in [`example/`](example). From this package directory, run:
+
+```bash
+flutter run -d chrome -t example/lib/main.dart
+```
 
 ## License
 

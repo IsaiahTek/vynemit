@@ -1,4 +1,3 @@
-
 enum ChannelType { inapp, push, email, sms, webhook }
 
 enum NotificationStatus { pending, sent, delivered, failed, read }
@@ -82,7 +81,8 @@ class Notification {
       type: json['type'],
       title: json['title'],
       body: json['body'],
-      data: json['data'] != null ? Map<String, dynamic>.from(json['data']) : null,
+      data:
+          json['data'] != null ? Map<String, dynamic>.from(json['data']) : null,
       userId: json['userId'],
       groupId: json['groupId'],
       priority: NotificationPriority.values.firstWhere(
@@ -96,8 +96,11 @@ class Notification {
       ),
       readAt: json['readAt'] != null ? DateTime.parse(json['readAt']) : null,
       createdAt: DateTime.parse(json['createdAt']),
-      scheduledFor: json['scheduledFor'] != null ? DateTime.parse(json['scheduledFor']) : null,
-      expiresAt: json['expiresAt'] != null ? DateTime.parse(json['expiresAt']) : null,
+      scheduledFor: json['scheduledFor'] != null
+          ? DateTime.parse(json['scheduledFor'])
+          : null,
+      expiresAt:
+          json['expiresAt'] != null ? DateTime.parse(json['expiresAt']) : null,
       channels: (json['channels'] as List<dynamic>?)
               ?.map((e) => ChannelType.values.firstWhere((c) => c.name == e))
               .toList() ??
@@ -149,7 +152,8 @@ class NotificationStats {
       unread: json['unread'] ?? 0,
       byStatus: (json['byStatus'] as Map<String, dynamic>?)?.map(
             (k, v) => MapEntry(
-                NotificationStatus.values.firstWhere((e) => e.name == k), v as int),
+                NotificationStatus.values.firstWhere((e) => e.name == k),
+                v as int),
           ) ??
           {},
       byChannel: (json['byChannel'] as Map<String, dynamic>?)?.map(
@@ -159,7 +163,8 @@ class NotificationStats {
           {},
       byPriority: (json['byPriority'] as Map<String, dynamic>?)?.map(
             (k, v) => MapEntry(
-                NotificationPriority.values.firstWhere((e) => e.name == k), v as int),
+                NotificationPriority.values.firstWhere((e) => e.name == k),
+                v as int),
           ) ??
           {},
     );
@@ -183,17 +188,18 @@ class ChannelPreferences {
     return ChannelPreferences(
       enabled: json['enabled'] ?? true,
       categories: (json['categories'] as List<dynamic>?)?.cast<String>(),
-      quietHours: (json['quietHours'] as Map<String, dynamic>?)?.cast<String, String>(),
+      quietHours:
+          (json['quietHours'] as Map<String, dynamic>?)?.cast<String, String>(),
       frequency: json['frequency'],
     );
   }
 
   Map<String, dynamic> toJson() => {
-    'enabled': enabled,
-    'categories': categories,
-    'quietHours': quietHours,
-    'frequency': frequency,
-  };
+        'enabled': enabled,
+        'categories': categories,
+        'quietHours': quietHours,
+        'frequency': frequency,
+      };
 }
 
 class NotificationPreferences {
@@ -226,18 +232,20 @@ class NotificationPreferences {
       userId: json['userId'],
       channels: channelsMap,
       globalMute: json['globalMute'] ?? false,
-      updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
-      data: json['data'] != null ? Map<String, dynamic>.from(json['data']) : null,
+      updatedAt:
+          json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
+      data:
+          json['data'] != null ? Map<String, dynamic>.from(json['data']) : null,
     );
   }
 
   Map<String, dynamic> toJson() => {
-    'userId': userId,
-    'channels': channels.map((k, v) => MapEntry(k.name, v.toJson())),
-    'globalMute': globalMute,
-    'updatedAt': updatedAt?.toIso8601String(),
-    'data': data,
-  };
+        'userId': userId,
+        'channels': channels.map((k, v) => MapEntry(k.name, v.toJson())),
+        'globalMute': globalMute,
+        'updatedAt': updatedAt?.toIso8601String(),
+        'data': data,
+      };
 }
 
 class NotificationConfig {
