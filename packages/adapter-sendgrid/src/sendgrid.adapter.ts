@@ -1,15 +1,23 @@
 import sgMail from '@sendgrid/mail';
 import { DeliveryReceipt, TransportAdapter, ChannelType, NotificationPreferences, EmailNotification } from '@vynelix/vynemit-core';
 
+export interface SendGridConfig {
+  apiKey: string;
+  fromEmail: string;
+  debug?: boolean;
+}
+
 export class SendGridProvider implements TransportAdapter {
   name: ChannelType = 'email';
-  private apiKey: string;
-  private fromEmail: string;
-
-  constructor(apiKey: string, fromEmail: string) {
-    this.apiKey = apiKey;
-    this.fromEmail = fromEmail;
-    sgMail.setApiKey(this.apiKey);
+  
+  constructor(private config: SendGridConfig) {
+    if (!config.apiKey) {
+      throw new Error('SendGrid API Key is required');
+    }
+    sgMail.setApiKey(this.config.apiKey);
+    if (this.config.debug) {
+      console.log(`[SendGrid] Initialized with from: ${this.config.fromEmail}`);
+    }
   }
 
   async send(notification: EmailNotification, preferences: NotificationPreferences): Promise<DeliveryReceipt> {
@@ -19,13 +27,26 @@ export class SendGridProvider implements TransportAdapter {
         throw new Error('Recipient email address not found');
       }
 
-      const [response] = await sgMail.send({
+      if (this.config.debug) {
+        console.log(`[SendGrid] Sending email to ${email} (Subject: ${notification.title})`);
+      }
+
+      const msg: any = {
         to: email,
-        from: this.fromEmail,
+        from: this.config.fromEmail,
         subject: notification.title,
         text: notification.text || notification.body,
         html: notification.html || notification.body,
-      });
+      };
+
+      // Support for SendGrid Dynamic Templates
+      if (notification.data?.templateId) {
+        msg.templateId = notification.data.templateId;
+        msg.dynamicTemplateData = notification.data.templateData || notification.data;
+        // When using templates, SendGrid ignores subject/text/html if they are defined in the template
+      }
+
+      const [response] = await sgMail.send(msg);
 
       return {
         notificationId: notification.id,
@@ -35,24 +56,31 @@ export class SendGridProvider implements TransportAdapter {
         lastAttempt: new Date(),
         metadata: {
           messageId: response.headers['x-message-id'],
+          statusCode: response.statusCode,
         },
       };
     } catch (error: any) {
+      const errorMessage = error.response?.body?.errors?.[0]?.message || error.message;
+      if (this.config.debug) {
+        console.error(`[SendGrid] Failed to send email: ${errorMessage}`, error.response?.body);
+      }
       return {
         notificationId: notification.id,
         channel: 'email',
         status: 'failed',
         attempts: 1,
         lastAttempt: new Date(),
-        error: error.message,
+        error: errorMessage,
       };
     }
   }
 
   async sendBatch(notifications: EmailNotification[], preferences: NotificationPreferences): Promise<DeliveryReceipt[]> {
-    // SendGrid supports batch sending, but for simplicity and to match SmtpProvider's behavior/structure, 
-    // we can send them individually or use SendGrid's batch if preferred.
-    // Given the task, I will implement it by iterating.
+    if (this.config.debug) {
+      console.log(`[SendGrid] Batch sending ${notifications.length} emails`);
+    }
+    // SendGrid supports batch sending via multiple personalizations, 
+    // but for the Vynemit architecture, we parallelize status reports.
     return Promise.all(
       notifications.map(notification => this.send(notification, preferences))
     );
@@ -83,17 +111,19 @@ export class SendGridProvider implements TransportAdapter {
 
   async healthCheck(): Promise<boolean> {
     try {
-      // SendGrid doesn't have a simple verify() like nodemailer, but we can try to send a test email to the from address
-      // or just assume it's up if the API key is set. For health check, maybe a simple request to SendGrid API.
-      // However, to keep it consistent with the previous implementation:
-      await sgMail.send({
-        to: this.fromEmail,
-        from: this.fromEmail,
-        subject: 'Health Check',
-        text: 'Health check',
+      // Non-invasive health check using SendGrid client to hit a simple read-only endpoint
+      // We'll use the stats API or scopes API which is standard for key verification
+      // @ts-ignore - reaching into the client
+      const client = (sgMail as any).client;
+      await client.request({
+        method: 'GET',
+        url: '/v3/scopes',
       });
       return true;
-    } catch {
+    } catch (error) {
+      if (this.config.debug) {
+        console.error('[SendGrid] Health check failed', error);
+      }
       return false;
     }
   }
