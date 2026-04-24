@@ -10,7 +10,9 @@ import {
 export interface TwilioConfig {
     accountSid: string;
     authToken: string;
-    fromNumber: string;
+    fromNumber?: string;
+    messagingServiceSid?: string;
+    debug?: boolean;
 }
 
 export class TwilioProvider implements TransportAdapter {
@@ -18,28 +20,49 @@ export class TwilioProvider implements TransportAdapter {
     private client: Twilio;
 
     constructor(private config: TwilioConfig) {
+        if (!config.accountSid || !config.authToken) {
+            throw new Error('Twilio Account SID and Auth Token are required');
+        }
+        if (!config.fromNumber && !config.messagingServiceSid) {
+            throw new Error('Twilio requires either fromNumber or messagingServiceSid');
+        }
         this.client = new Twilio(config.accountSid, config.authToken);
+        
+        if (this.config.debug) {
+            console.log(`[Twilio] Initialized with ${config.messagingServiceSid ? 'Messaging Service: ' + config.messagingServiceSid : 'Number: ' + config.fromNumber}`);
+        }
     }
 
     async send(notification: SmsNotification, preferences: NotificationPreferences): Promise<DeliveryReceipt> {
         try {
             const phoneNumber = this.resolvePhoneNumber(notification, preferences);
             if (!phoneNumber) {
-                return {
-                    notificationId: notification.id,
-                    channel: this.name,
-                    status: 'failed',
-                    attempts: 1,
-                    lastAttempt: new Date(),
-                    error: 'No phone number found for recipient'
-                };
+                throw new Error('No phone number found for recipient');
             }
 
-            const message = await this.client.messages.create({
+            const isWhatsApp = !!(notification.data?.whatsapp || phoneNumber.startsWith('whatsapp:'));
+            const recipient = isWhatsApp && !phoneNumber.startsWith('whatsapp:') 
+                ? `whatsapp:${phoneNumber}` 
+                : phoneNumber;
+
+            if (this.config.debug) {
+                console.log(`[Twilio] Sending ${isWhatsApp ? 'WhatsApp' : 'SMS'} to ${recipient}`);
+            }
+
+            const messageParams: any = {
                 body: notification.body,
-                from: this.config.fromNumber,
-                to: phoneNumber
-            });
+                to: recipient,
+            };
+
+            if (this.config.messagingServiceSid) {
+                messageParams.messagingServiceSid = this.config.messagingServiceSid;
+            } else {
+                messageParams.from = isWhatsApp && !this.config.fromNumber?.startsWith('whatsapp:')
+                    ? `whatsapp:${this.config.fromNumber}`
+                    : this.config.fromNumber;
+            }
+
+            const message = await this.client.messages.create(messageParams);
 
             return {
                 notificationId: notification.id,
@@ -47,30 +70,42 @@ export class TwilioProvider implements TransportAdapter {
                 status: 'sent',
                 attempts: 1,
                 lastAttempt: new Date(),
-                metadata: { messageSid: message.sid }
+                metadata: { 
+                    messageSid: message.sid,
+                    status: message.status,
+                    errorCode: message.errorCode,
+                }
             };
-        } catch (error) {
+        } catch (error: any) {
+            const errorMessage = error.message || 'Unknown Twilio error';
+            const errorCode = error.code || undefined;
+
+            if (this.config.debug) {
+                console.error(`[Twilio] Failed to send: ${errorMessage} (Code: ${errorCode})`);
+            }
+
             return {
                 notificationId: notification.id,
                 channel: this.name,
                 status: 'failed',
                 attempts: 1,
                 lastAttempt: new Date(),
-                error: (error as Error).message
+                error: errorMessage,
+                metadata: { errorCode }
             };
         }
     }
 
     async sendBatch(notifications: SmsNotification[], preferences: NotificationPreferences): Promise<DeliveryReceipt[]> {
-        // Twilio doesn't have a native "batch" API like FCM's sendEach, 
-        // but we can parallelize requests.
+        if (this.config.debug) {
+            console.log(`[Twilio] Batch sending ${notifications.length} messages`);
+        }
         return Promise.all(
             notifications.map(notification => this.send(notification, preferences))
         );
     }
 
     async sendMulticast(notifications: SmsNotification[], preferences: NotificationPreferences): Promise<DeliveryReceipt[]> {
-        // For SMS, we'll just use sendBatch as there's no native multicast
         return this.sendBatch(notifications, preferences);
     }
 
@@ -85,6 +120,9 @@ export class TwilioProvider implements TransportAdapter {
             await this.client.api.accounts(this.config.accountSid).fetch();
             return true;
         } catch (error) {
+            if (this.config.debug) {
+                console.error('[Twilio] Health check failed', error);
+            }
             return false;
         }
     }
@@ -109,7 +147,9 @@ export class TwilioProvider implements TransportAdapter {
     }
 
     private isValidPhoneNumber(phone: string): boolean {
-        // Basic check for E.164-ish format
-        return /^\+?[1-9]\d{1,14}$/.test(phone);
+        // Basic check for E.164-ish format (including whatsapp: prefix)
+        const cleanPhone = phone.startsWith('whatsapp:') ? phone.split(':')[1] : phone;
+        return /^\+?[1-9]\d{1,14}$/.test(cleanPhone);
     }
 }
+
