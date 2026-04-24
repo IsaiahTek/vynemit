@@ -2,7 +2,9 @@ import { DeliveryReceipt, TransportAdapter, ChannelType, NotificationPreferences
 export interface TwilioConfig {
     accountSid: string;
     authToken: string;
-    fromNumber: string;
+    fromNumber?: string;
+    messagingServiceSid?: string;
+    debug?: boolean;
 }
 export declare class TwilioProvider implements TransportAdapter {
     private config;
