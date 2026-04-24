@@ -94,15 +94,10 @@ export class NotificationsService implements OnModuleInit, OnModuleDestroy {
      * @throws InternalServerErrorException if the send operation fails.
      */
     async send(input: NotificationInput): Promise<Notification> {
-        console.log("🔔 NotificationsService.send() CALLED");
-        console.log("📋 Input:", JSON.stringify(input, null, 2));
-        this.logger.log("SEND NOTIFICATION TRIGGERED WITH INPUT: ", input);
-
         let notification: Notification;
 
         try {
             const center = this.getCenter();
-            console.log("✅ NotificationCenter instance obtained");
 
             notification = await center.send(input);
             console.log("✅ Notification sent successfully:", notification.id);

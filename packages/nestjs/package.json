@@ -1,6 +1,6 @@
 {
   "name": "@vynelix/vynemit-nestjs",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Official Vynemit NestJs Wrapper that makes it super easy to send and manage notifications from within your NestJs backend",
   "main": "dist/index.js",
   "scripts": {
