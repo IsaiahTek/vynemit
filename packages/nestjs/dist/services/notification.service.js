@@ -54,13 +54,9 @@ let NotificationsService = NotificationsService_1 = class NotificationsService {
         return () => this.eventEmitter.off('unread:changed', callback);
     }
     async send(input) {
-        console.log("🔔 NotificationsService.send() CALLED");
-        console.log("📋 Input:", JSON.stringify(input, null, 2));
-        this.logger.log("SEND NOTIFICATION TRIGGERED WITH INPUT: ", input);
         let notification;
         try {
             const center = this.getCenter();
-            console.log("✅ NotificationCenter instance obtained");
             notification = await center.send(input);
             console.log("✅ Notification sent successfully:", notification.id);
             this.eventEmitter.emit('notification:sent', notification);

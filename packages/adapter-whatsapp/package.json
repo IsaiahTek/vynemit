@@ -1,7 +1,7 @@
 {
-  "name": "@vynelix/vynemit-adapter-sendgrid",
+  "name": "@vynelix/vynemit-adapter-whatsapp",
   "version": "1.0.0",
-  "description": "SendGrid transport adapter for Vynemit",
+  "description": "WhatsApp Cloud API transport adapter for Vynemit",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -14,10 +14,10 @@
   },
   "keywords": [
     "vynemit",
-    "sendgrid",
+    "whatsapp",
     "notification",
-    "email",
-    "adapter"
+    "adapter",
+    "meta"
   ],
   "license": "MIT",
   "publishConfig": {
@@ -26,14 +26,10 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/IsaiahTek/vynemit.git",
-    "directory": "packages/adapter-sendgrid"
+    "directory": "packages/adapter-whatsapp"
   },
-  "bugs": {
-    "url": "https://github.com/IsaiahTek/vynemit/issues"
-  },
-  "homepage": "https://github.com/IsaiahTek/vynemit#readme",
   "dependencies": {
-    "@sendgrid/mail": "^7.7.0"
+    "axios": "^1.4.0"
   },
   "peerDependencies": {
     "@vynelix/vynemit-core": "*"
@@ -45,4 +41,3 @@
     "typescript": "^5.0.0"
   }
 }
-

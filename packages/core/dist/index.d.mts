@@ -1,4 +1,4 @@
-type ChannelType = 'inapp' | 'push' | 'email' | 'sms' | 'webhook';
+type ChannelType = 'inapp' | 'push' | 'email' | 'sms' | 'webhook' | 'whatsapp' | 'chat';
 type NotificationStatus = 'pending' | 'sent' | 'delivered' | 'failed' | 'read';
 type NotificationPriority = 'low' | 'normal' | 'high' | 'urgent';
 type DeliveryStatus = 'pending' | 'sent' | 'delivered' | 'failed' | 'bounced';
@@ -50,6 +50,17 @@ interface PushNotification extends Notification {
 }
 interface InAppNotification extends Notification {
     data?: Record<string, unknown>;
+}
+interface WhatsAppNotification extends Notification {
+    data: {
+        phoneNumber?: string;
+        template?: {
+            name: string;
+            language?: string;
+            components?: any[];
+        };
+        [key: string]: unknown;
+    };
 }
 interface NotificationInput {
     type: string;
@@ -540,4 +551,4 @@ declare class MemoryStorageAdapter implements StorageAdapter {
     getReceipts(notificationId: string): Promise<DeliveryReceipt[]>;
 }
 
-export { ChannelFrequency, ChannelPreferences, ChannelType, ConsoleTransportAdapter, DeliveryReceipt, DeliveryStatus, DigestConfig, DigestFrequency, EmailNotification, InAppNotification, MemoryQueueAdapter, MemoryStorageAdapter, Notification, NotificationAction, NotificationCenter, NotificationConfig, NotificationEvent, NotificationFilters, NotificationInput, NotificationMiddleware, NotificationMulticastInput, NotificationPreferences, NotificationPriority, NotificationStats, NotificationStatus, NotificationTemplate, PushNotification, QueueAdapter, QuietHours, SmsNotification, StorageAdapter, TransportAdapter, Unsubscribe };
+export { ChannelFrequency, ChannelPreferences, ChannelType, ConsoleTransportAdapter, DeliveryReceipt, DeliveryStatus, DigestConfig, DigestFrequency, EmailNotification, InAppNotification, MemoryQueueAdapter, MemoryStorageAdapter, Notification, NotificationAction, NotificationCenter, NotificationConfig, NotificationEvent, NotificationFilters, NotificationInput, NotificationMiddleware, NotificationMulticastInput, NotificationPreferences, NotificationPriority, NotificationStats, NotificationStatus, NotificationTemplate, PushNotification, QueueAdapter, QuietHours, SmsNotification, StorageAdapter, TransportAdapter, Unsubscribe, WhatsAppNotification };

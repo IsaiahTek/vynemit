@@ -1,7 +1,7 @@
 {
-  "name": "@vynelix/vynemit-adapter-sendgrid",
+  "name": "@vynelix/vynemit-adapter-telegram",
   "version": "1.0.0",
-  "description": "SendGrid transport adapter for Vynemit",
+  "description": "Telegram transport adapter for Vynemit",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -14,9 +14,8 @@
   },
   "keywords": [
     "vynemit",
-    "sendgrid",
+    "telegram",
     "notification",
-    "email",
     "adapter"
   ],
   "license": "MIT",
@@ -26,14 +25,10 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/IsaiahTek/vynemit.git",
-    "directory": "packages/adapter-sendgrid"
+    "directory": "packages/adapter-telegram"
   },
-  "bugs": {
-    "url": "https://github.com/IsaiahTek/vynemit/issues"
-  },
-  "homepage": "https://github.com/IsaiahTek/vynemit#readme",
   "dependencies": {
-    "@sendgrid/mail": "^7.7.0"
+    "axios": "^1.4.0"
   },
   "peerDependencies": {
     "@vynelix/vynemit-core": "*"
@@ -45,4 +40,3 @@
     "typescript": "^5.0.0"
   }
 }
-

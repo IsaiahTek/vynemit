@@ -2,7 +2,7 @@
 // CORE TYPES
 // ============================================================================
 
-export type ChannelType = 'inapp' | 'push' | 'email' | 'sms' | 'webhook';
+export type ChannelType = 'inapp' | 'push' | 'email' | 'sms' | 'webhook' | 'whatsapp' | 'chat';
 
 export type NotificationStatus = 'pending' | 'sent' | 'delivered' | 'failed' | 'read';
 
@@ -80,6 +80,18 @@ export interface PushNotification extends Notification {
 export interface InAppNotification extends Notification {
   // In-app often just uses the base fields or specific UI data
   data?: Record<string, unknown>;
+}
+
+export interface WhatsAppNotification extends Notification {
+  data: {
+    phoneNumber?: string;
+    template?: {
+      name: string;
+      language?: string;
+      components?: any[];
+    };
+    [key: string]: unknown;
+  };
 }
 
 export interface NotificationInput {
