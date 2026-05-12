@@ -1,19 +1,45 @@
 import * as admin from 'firebase-admin';
 import { DeliveryReceipt, TransportAdapter, ChannelType, NotificationPreferences, PushNotification } from '@vynelix/vynemit-core';
 
+export interface FcmConfig {
+    messaging?: admin.messaging.Messaging;
+    debug?: boolean;
+}
+
 export class FcmProvider implements TransportAdapter {
     name: ChannelType = 'push';
+    private messaging?: admin.messaging.Messaging;
 
-    constructor(private app?: admin.messaging.Messaging) {
-        if (!this.app && admin.apps.length === 0) {
+    constructor(private config?: FcmConfig | admin.messaging.Messaging) {
+        if (config && (config as any).send) {
+            // Backward compatibility for passing admin.messaging() directly
+            this.messaging = config as admin.messaging.Messaging;
+            this.config = { messaging: this.messaging };
+        } else if (config) {
+            this.config = config as FcmConfig;
+            this.messaging = (config as FcmConfig).messaging;
+        }
+
+        if (!this.messaging && admin.apps.length === 0) {
             throw new Error('Firebase Admin SDK not initialized and no app provided.');
         }
+
+        if (this.config && (this.config as FcmConfig).debug) {
+            console.log('[FCM] Provider initialized');
+        }
+    }
+
+    private get isDebug(): boolean {
+        return !!(this.config && (this.config as FcmConfig).debug);
     }
 
     async send(notification: PushNotification, preferences: NotificationPreferences): Promise<DeliveryReceipt> {
         try {
             const token = this.resolveDeviceToken(notification, preferences);
             if (!token) {
+                if (this.isDebug) {
+                    console.warn(`[FCM] No device token found for notification: ${notification.id}`);
+                }
                 return {
                     notificationId: notification.id,
                     channel: this.name,
@@ -22,6 +48,10 @@ export class FcmProvider implements TransportAdapter {
                     lastAttempt: new Date(),
                     error: 'No device token found for recipient'
                 };
+            }
+
+            if (this.isDebug) {
+                console.log(`[FCM] Sending push to ${token.substring(0, 10)}...`);
             }
 
             const message: admin.messaging.Message = {
@@ -33,7 +63,12 @@ export class FcmProvider implements TransportAdapter {
                 data: notification.data as Record<string, string>,
             };
 
-            const response = await (this.app)?.send(message);
+            const messaging = this.messaging || admin.messaging();
+            const response = await messaging.send(message);
+
+            if (this.isDebug) {
+                console.log(`[FCM] Push sent successfully: ${response}`);
+            }
 
             return {
                 notificationId: notification.id,
@@ -44,6 +79,9 @@ export class FcmProvider implements TransportAdapter {
                 metadata: { messageId: response }
             };
         } catch (error) {
+            if (this.isDebug) {
+                console.error(`[FCM] Failed to send push: ${(error as Error).message}`);
+            }
             return this.handleError(notification.id, error as Error);
         }
     }
@@ -52,6 +90,10 @@ export class FcmProvider implements TransportAdapter {
         const messages: admin.messaging.Message[] = [];
         const validNotifications: PushNotification[] = [];
         const receipts: DeliveryReceipt[] = [];
+
+        if (this.isDebug) {
+            console.log(`[FCM] Processing batch of ${notifications.length} notifications`);
+        }
 
         for (const notification of notifications) {
             const token = this.resolveDeviceToken(notification, preferences);
@@ -83,9 +125,14 @@ export class FcmProvider implements TransportAdapter {
         }
 
         try {
-            const batchResponse = await (this.app)?.sendEach(messages);
+            const messaging = this.messaging || admin.messaging();
+            const batchResponse = await messaging.sendEach(messages);
 
-            batchResponse?.responses.forEach((res: admin.messaging.SendResponse, index: number) => {
+            if (this.isDebug) {
+                console.log(`[FCM] Batch sent: ${batchResponse.successCount} success, ${batchResponse.failureCount} failure`);
+            }
+
+            batchResponse.responses.forEach((res: admin.messaging.SendResponse, index: number) => {
                 const notification = validNotifications[index];
                 if (res.success) {
                     receipts.push({
@@ -101,7 +148,9 @@ export class FcmProvider implements TransportAdapter {
                 }
             });
         } catch (error) {
-            // This loop handles the case where the entire batch call fails (e.g. network)
+            if (this.isDebug) {
+                console.error(`[FCM] Batch call failed: ${(error as Error).message}`);
+            }
             validNotifications.forEach(notification => {
                 receipts.push(this.handleError(notification.id, error as Error));
             });
@@ -113,6 +162,10 @@ export class FcmProvider implements TransportAdapter {
     async sendMulticast(notifications: PushNotification[], preferences: NotificationPreferences): Promise<DeliveryReceipt[]> {
         const receipts: DeliveryReceipt[] = [];
         const contentGroups = new Map<string, { notification: admin.messaging.Notification, data?: Record<string, string>, tokens: string[], originalNotifications: PushNotification[] }>();
+
+        if (this.isDebug) {
+            console.log(`[FCM] Processing multicast for ${notifications.length} notifications`);
+        }
 
         for (const notification of notifications) {
             const token = this.resolveDeviceToken(notification, preferences);
@@ -128,8 +181,6 @@ export class FcmProvider implements TransportAdapter {
                 continue;
             }
 
-            // Create a unique key for the notification content to group identical messages
-            // Exclude deviceToken from the grouping key as it varies per notification
             const { deviceToken: _, ...groupingData } = notification.data || {};
             const contentKey = JSON.stringify({
                 title: notification.title,
@@ -158,18 +209,22 @@ export class FcmProvider implements TransportAdapter {
             return receipts;
         }
 
-        // Process each group of identical messages
+        const messaging = this.messaging || admin.messaging();
+
         for (const group of contentGroups.values()) {
             try {
+                if (this.isDebug) {
+                    console.log(`[FCM] Sending multicast group to ${group.tokens.length} tokens`);
+                }
                 const message: admin.messaging.MulticastMessage = {
                     tokens: group.tokens,
                     notification: group.notification,
                     data: group.data,
                 };
 
-                const batchResponse = await (this.app)?.sendEachForMulticast(message);
+                const batchResponse = await messaging.sendEachForMulticast(message);
 
-                batchResponse?.responses.forEach((res: admin.messaging.SendResponse, index: number) => {
+                batchResponse.responses.forEach((res: admin.messaging.SendResponse, index: number) => {
                     const originalNotif = group.originalNotifications[index];
                     if (res.success) {
                         receipts.push({
@@ -185,7 +240,9 @@ export class FcmProvider implements TransportAdapter {
                     }
                 });
             } catch (error) {
-                // Handle entire multicast call failure
+                if (this.isDebug) {
+                    console.error(`[FCM] Multicast group failed: ${(error as Error).message}`);
+                }
                 group.originalNotifications.forEach(notif => {
                     receipts.push(this.handleError(notif.id, error as Error));
                 });
@@ -202,16 +259,17 @@ export class FcmProvider implements TransportAdapter {
 
     async healthCheck(): Promise<boolean> {
         try {
-            // Check if Firebase is initialized
-            const app = this.app || admin.app();
-            return !!app;
+            const messaging = this.messaging || admin.messaging();
+            return !!messaging;
         } catch (error) {
+            if (this.isDebug) {
+                console.error(`[FCM] Health check failed: ${(error as Error).message}`);
+            }
             return false;
         }
     }
 
     private handleError(notificationId: string, error: Error | admin.FirebaseError): DeliveryReceipt {
-        // Here we could add logic to classify errors (e.g. retryable vs non-retryable)
         return {
             notificationId,
             channel: this.name,
@@ -224,12 +282,10 @@ export class FcmProvider implements TransportAdapter {
     }
 
     private resolveDeviceToken(notification: PushNotification, preferences?: NotificationPreferences): string | undefined {
-        // 1. Check notification data
         if (notification.data?.deviceToken && typeof notification.data.deviceToken === 'string') {
             return notification.data.deviceToken;
         }
 
-        // 2. Check preferences data
         if (preferences?.data?.deviceToken && typeof preferences.data.deviceToken === 'string') {
             return preferences.data.deviceToken;
         }
