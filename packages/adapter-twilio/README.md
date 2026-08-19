@@ -14,12 +14,21 @@ npm install @vynelix/vynemit-adapter-twilio
 import { NotificationCenter } from '@vynelix/vynemit-core';
 import { TwilioProvider } from '@vynelix/vynemit-adapter-twilio';
 
+// Option 1: Using API Key and Secret (Recommended for production)
 const twilio = new TwilioProvider({
   accountSid: process.env.TWILIO_ACCOUNT_SID,
-  authToken: process.env.TWILIO_AUTH_TOKEN,
+  apiKey: process.env.TWILIO_API_KEY,
+  apiSecret: process.env.TWILIO_API_SECRET,
   fromNumber: '+1234567890', // Required if no messagingServiceSid
   // messagingServiceSid: 'MGxxxxxxxx', // Optional: Use a Messaging Service
   debug: true // Optional: enables detailed logging
+});
+
+// Option 2: Using Account SID and Auth Token
+const twilioWithAuthToken = new TwilioProvider({
+  accountSid: process.env.TWILIO_ACCOUNT_SID,
+  authToken: process.env.TWILIO_AUTH_TOKEN,
+  fromNumber: '+1234567890',
 });
 
 const nc = new NotificationCenter({

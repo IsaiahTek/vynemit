@@ -6,13 +6,24 @@ class TwilioProvider {
     constructor(config) {
         this.config = config;
         this.name = 'sms';
-        if (!config.accountSid || !config.authToken) {
-            throw new Error('Twilio Account SID and Auth Token are required');
+        if (!config.accountSid) {
+            throw new Error('Twilio Account SID is required');
+        }
+        if (!config.authToken && (!config.apiKey || !config.apiSecret)) {
+            throw new Error('Twilio Auth Token or API Key and Secret are required');
         }
         if (!config.fromNumber && !config.messagingServiceSid) {
             throw new Error('Twilio requires either fromNumber or messagingServiceSid');
         }
-        this.client = new twilio_1.Twilio(config.accountSid, config.authToken);
+        if (config.apiKey && config.apiSecret) {
+            this.client = new twilio_1.Twilio(config.apiKey, config.apiSecret, { accountSid: config.accountSid });
+        }
+        else if (config.authToken) {
+            this.client = new twilio_1.Twilio(config.accountSid, config.authToken);
+        }
+        else {
+            throw new Error('Twilio Auth Token or API Key and Secret are required');
+        }
         if (this.config.debug) {
             console.log(`[Twilio] Initialized with ${config.messagingServiceSid ? 'Messaging Service: ' + config.messagingServiceSid : 'Number: ' + config.fromNumber}`);
         }

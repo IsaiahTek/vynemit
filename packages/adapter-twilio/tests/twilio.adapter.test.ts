@@ -1,5 +1,6 @@
 import { TwilioProvider } from '../src/twilio.adapter';
 import { SmsNotification, NotificationPreferences } from '@vynelix/vynemit-core';
+import { Twilio } from 'twilio';
 
 const mockMessagesCreate = jest.fn();
 const mockAccountsFetch = jest.fn();
@@ -34,6 +35,55 @@ describe('TwilioProvider', () => {
 
     it('should be defined', () => {
         expect(TwilioProvider).toBeDefined();
+    });
+
+    it('should initialize with Auth Token', () => {
+        new TwilioProvider({
+            accountSid: 'AC-123',
+            authToken: 'token-123',
+            fromNumber: '+1234567890',
+        });
+        expect(Twilio).toHaveBeenCalledWith('AC-123', 'token-123');
+    });
+
+    it('should initialize with API Key and API Secret', () => {
+        new TwilioProvider({
+            accountSid: 'AC-123',
+            apiKey: 'SK-123',
+            apiSecret: 'secret-123',
+            fromNumber: '+1234567890',
+        });
+        expect(Twilio).toHaveBeenCalledWith('SK-123', 'secret-123', { accountSid: 'AC-123' });
+    });
+
+    it('should throw error when accountSid is missing', () => {
+        expect(() => new TwilioProvider({
+            accountSid: '',
+            authToken: 'token-123',
+            fromNumber: '+1234567890',
+        })).toThrow('Twilio Account SID is required');
+    });
+
+    it('should throw error when both authToken and apiKey/apiSecret are missing', () => {
+        expect(() => new TwilioProvider({
+            accountSid: 'AC-123',
+            fromNumber: '+1234567890',
+        })).toThrow('Twilio Auth Token or API Key and Secret are required');
+    });
+
+    it('should throw error when apiKey is provided without apiSecret', () => {
+        expect(() => new TwilioProvider({
+            accountSid: 'AC-123',
+            apiKey: 'SK-123',
+            fromNumber: '+1234567890',
+        })).toThrow('Twilio Auth Token or API Key and Secret are required');
+    });
+
+    it('should throw error when neither fromNumber nor messagingServiceSid is provided', () => {
+        expect(() => new TwilioProvider({
+            accountSid: 'AC-123',
+            authToken: 'token-123',
+        })).toThrow('Twilio requires either fromNumber or messagingServiceSid');
     });
 
     it('should send SMS successfully', async () => {
